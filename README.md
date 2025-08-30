@@ -1,69 +1,88 @@
-# React + TypeScript + Vite
+# Async Race 🚗💨
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Deployed UI:** [https://suroNorekyan.github.io/asyncRace](https://suroNorekyan.github.io/asyncRace)  
+**Estimated Score:** 400/400 ✅
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 📋 Checklist (Self-Assessment)
 
-## Expanding the ESLint configuration
+- [x] **UI Deployment** (GitHub Pages)
+- [x] **Commit Guidelines** (conventional commits followed)
+- [x] **Checklist in README.md**
+- [x] **Score calculation included**
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Basic Structure (80 pts)
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- [x] Two views (Garage & Winners) (10)
+- [x] Garage view with creation, editing, race control, garage section (30)
+- [x] Winners view with table & pagination (10)
+- [x] Persistent state between views (30)
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### Garage View (90 pts)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+- [x] CRUD operations for cars (20)
+- [x] Color picker + rendering (10)
+- [x] 100 random cars (20)
+- [x] Car management buttons (10)
+- [x] Pagination (7 per page) (10)
+- [x] Empty garage handling + auto back to previous page (20, extra)
+
+### Winners View (50 pts)
+
+- [x] Display winners (15)
+- [x] Pagination (10)
+- [x] Table with №, car, name, wins, best time (15)
+- [x] Sorting by wins & best time (10)
+
+### Race (170 pts)
+
+- [x] Start engine animation + handle 500 error (20)
+- [x] Stop engine animation (20)
+- [x] Responsive animation (≥500px) (30)
+- [x] Start race button (10)
+- [x] Reset race button (15)
+- [x] Winner banner (5)
+- [x] Proper button states (20)
+- [x] Predictable actions during race (block/remove/etc) (50)
+
+### Prettier & ESLint (10 pts)
+
+- [x] Prettier setup (5)
+- [x] Airbnb ESLint strict config (5)
+
+### Code Quality (100 pts, Skipped during the self-check)
+
+---
+
+## 🚀 How to Run Locally
+
+Clone the repo:
+
+```bash
+git clone https://github.com/SuroNorekyan/asyncRace.git
+cd asyncRace
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Install dependencies::
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x';
-import reactDom from 'eslint-plugin-react-dom';
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```bash
+npm install
 ```
+
+Run dev server:
+
+```bash
+npm run dev
+```
+
+Build for production:
+``bash
+npm run build
+
+````
+
+Deploy to Github Pages:
+```bash
+npm run deploy
+````

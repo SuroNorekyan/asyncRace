@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# no emitted JS in source
+src/**/*.js
+src/**/*.js.map
