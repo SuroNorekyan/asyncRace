@@ -1,0 +1,1345 @@
+__FILES TO IMPLEMENT__
+Below you’ll find:
+
+a clean, modern project layout (Vite + Redux Toolkit),
+
+all files with code,
+
+ESLint (Airbnb) + Prettier, strict tsconfig, and env handling,
+
+a responsive neon UI that matches your screenshots (Garage, Winners, Winner overlay),
+
+fully wired API logic that respects the backend contract (cars, engine, winners, sorting, pagination, race flow, error states).
+
+Where I reference backend routes/behavior, I cite the provided backend README so an interviewer can verify the exact endpoints/params and headers. For example, paginated cars with X-Total-Count, engine PATCH flow (started → drive), winners sorting via _sort/_order, etc. 
+ 
+ 
+ 
+
+1) Project structure
+async-race-ui/
+├─ public/
+│  └─ favicon.svg
+├─ .env.sample
+├─ .eslintrc.cjs
+├─ .prettierrc.json
+├─ package.json
+├─ tsconfig.json
+├─ tsconfig.eslint.json
+├─ vite.config.ts
+├─ README.md            ← frontend readme (with deploy link + checklist)
+└─ src/
+   ├─ app/
+   │  ├─ App.tsx
+   │  ├─ routes.tsx
+   │  ├─ store.ts
+   │  └─ hooks.ts
+   ├─ components/
+   │  ├─ Header.tsx
+   │  ├─ ControlsBar.tsx
+   │  ├─ CarRow.tsx
+   │  ├─ Track.tsx
+   │  ├─ WinnerOverlay.tsx
+   │  ├─ WinnersTable.tsx
+   │  └─ Pagination.tsx
+   ├─ features/
+   │  ├─ garage/
+   │  │  ├─ garageSlice.ts
+   │  │  └─ thunks.ts
+   │  ├─ race/
+   │  │  ├─ raceSlice.ts
+   │  │  └─ runner.ts
+   │  └─ winners/
+   │     ├─ winnersSlice.ts
+   │     └─ thunks.ts
+   ├─ pages/
+   │  ├─ GaragePage.tsx
+   │  └─ WinnersPage.tsx
+   ├─ shared/
+   │  ├─ api/
+   │  │  ├─ base.ts
+   │  │  ├─ cars.ts
+   │  │  ├─ engine.ts
+   │  │  └─ winners.ts
+   │  ├─ lib/
+   │  │  ├─ colors.ts
+   │  │  ├─ names.ts
+   │  │  └─ qs.ts
+   │  └─ types.ts
+   ├─ styles/
+   │  ├─ index.css
+   │  └─ variables.css
+   └─ main.tsx
+
+
+Notes:
+
+Redux Toolkit manages all state (no prop drilling). Garage pagination/input state and Winners pagination/sort are preserved across view switches.
+
+Cars per page: 7. Winners per page: 10.
+
+All API calls use fetch with strong types.
+
+Buttons are predictably disabled during race.
+
+Deleting last car on a page auto-navigates to previous page if needed (no empty page).
+
+Winner overlay persists until Reset or “Start a new race”.
+
+2) Environment
+
+.env.sample
+
+VITE_API_BASE_URL=http://127.0.0.1:3000
+
+3) Tooling configs
+
+package.json
+
+{
+  "name": "async-race-ui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "ci:format": "prettier --check .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.2.7",
+    "clsx": "^2.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-redux": "^9.1.2",
+    "react-router-dom": "^6.26.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.4",
+    "@types/react": "^18.3.8",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.6.0",
+    "@typescript-eslint/parser": "^8.6.0",
+    "eslint": "^9.9.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-airbnb-typescript": "^18.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsx-a11y": "^6.9.0",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "prettier": "^3.3.3",
+    "prettier-plugin-organize-imports": "^4.0.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2"
+  }
+}
+
+
+.eslintrc.cjs
+
+/* eslint-env node */
+module.exports = {
+  root: true,
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: ['./tsconfig.eslint.json'],
+    tsconfigRootDir: __dirname
+  },
+  plugins: ['@typescript-eslint', 'react', 'react-hooks', 'jsx-a11y', 'import'],
+  extends: [
+    'airbnb',
+    'airbnb-typescript',
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+    'plugin:jsx-a11y/recommended',
+    'plugin:import/recommended',
+    'plugin:import/typescript',
+    'prettier'
+  ],
+  settings: { react: { version: 'detect' } },
+  rules: {
+    'react/react-in-jsx-scope': 'off',
+    'react/jsx-props-no-spreading': 'off',
+    'react/function-component-definition': ['error', { namedComponents: 'arrow-function' }],
+    'import/prefer-default-export': 'off',
+    'max-lines-per-function': ['error', 200],
+    'no-magic-numbers': ['warn', { ignoreArrayIndexes: true, ignore: [0, 1, 2, 7, 10] }]
+  }
+};
+
+
+.prettierrc.json
+
+{
+  "printWidth": 100,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "arrowParens": "avoid",
+  "plugins": ["prettier-plugin-organize-imports"]
+}
+
+
+tsconfig.json
+
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowJs": false,
+    "strict": true,
+    "noImplicitAny": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["vite/client"]
+  },
+  "include": ["src"]
+}
+
+
+tsconfig.eslint.json
+
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx", ".eslintrc.cjs"]
+}
+
+
+vite.config.ts
+
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()]
+});
+
+4) Shared types & API
+
+src/shared/types.ts
+
+export type Car = {
+  id: number;
+  name: string;
+  color: string; // hex
+};
+
+export type EngineStartResponse = {
+  velocity: number; // px/s equivalent unit from API
+  distance: number; // track distance unit from API
+};
+
+export type Winner = {
+  id: number;  // carId
+  wins: number;
+  time: number; // in seconds
+};
+
+export type WinnerRow = Winner & {
+  car: Pick<Car, 'name' | 'color'>;
+};
+
+export type SortField = 'id' | 'wins' | 'time';
+export type SortOrder = 'ASC' | 'DESC';
+
+
+src/shared/lib/qs.ts
+
+export const qs = (params: Record<string, string | number | undefined>) => {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined) search.set(k, String(v));
+  });
+  const s = search.toString();
+  return s ? `?${s}` : '';
+};
+
+
+src/shared/lib/names.ts
+
+const BRANDS = [
+  'Tesla', 'Ford', 'BMW', 'Audi', 'Mercedes', 'Volvo', 'Toyota', 'Honda', 'Nissan', 'Mazda',
+  'Porsche', 'Lexus'
+];
+const MODELS = [
+  'Model S', 'Model 3', 'Mustang', 'Civic', 'Supra', 'CX-5', 'A6', 'S3', 'GLB', 'C-Class',
+  'V90', 'Roadster'
+];
+
+export const randomName = () => {
+  const brand = BRANDS[Math.floor(Math.random() * BRANDS.length)];
+  const model = MODELS[Math.floor(Math.random() * MODELS.length)];
+  return `${brand} ${model}`;
+};
+
+
+src/shared/lib/colors.ts
+
+export const randomHex = () =>
+  `#${Math.floor(Math.random() * 0xffffff)
+    .toString(16)
+    .padStart(6, '0')}`;
+
+
+src/shared/api/base.ts
+
+import { qs } from '../lib/qs';
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:3000';
+
+export const apiUrl = (path: string, params?: Record<string, string | number | undefined>) =>
+  `${API_BASE}${path}${params ? qs(params) : ''}`;
+
+export type FetchResult<T> = { data: T; headers: Headers };
+
+export async function getJSON<T>(url: string, init?: RequestInit): Promise<FetchResult<T>> {
+  const res = await fetch(url, init);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`${res.status} ${res.statusText}: ${text}`);
+  }
+  const data = (await res.json()) as T;
+  return { data, headers: res.headers };
+}
+
+
+src/shared/api/cars.ts
+
+import { Car } from '../types';
+import { apiUrl, getJSON } from './base';
+
+export async function getCars(page: number, limit: number) {
+  const { data, headers } = await getJSON<Car[]>(
+    apiUrl('/garage', { _page: page, _limit: limit }),
+  );
+  const total = Number(headers.get('X-Total-Count') ?? '0'); // :contentReference[oaicite:4]{index=4}
+  return { data, total };
+}
+
+export const getCar = (id: number) => getJSON<Car>(apiUrl(`/garage/${id}`)); // :contentReference[oaicite:5]{index=5}
+
+export async function createCar(input: Omit<Car, 'id'>) {
+  const { data } = await getJSON<Car>(apiUrl('/garage'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  }); // :contentReference[oaicite:6]{index=6}
+  return data;
+}
+
+export async function updateCar(id: number, input: Omit<Car, 'id'>) {
+  const { data } = await getJSON<Car>(apiUrl(`/garage/${id}`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  }); // :contentReference[oaicite:7]{index=7}
+  return data;
+}
+
+export async function deleteCar(id: number) {
+  await getJSON<unknown>(apiUrl(`/garage/${id}`), { method: 'DELETE' }); // :contentReference[oaicite:8]{index=8}
+}
+
+
+src/shared/api/engine.ts
+
+import { EngineStartResponse } from '../types';
+import { apiUrl, getJSON } from './base';
+
+export const startEngine = (id: number) =>
+  getJSON<EngineStartResponse>(apiUrl('/engine', { id, status: 'started' })).then(r => r.data); // :contentReference[oaicite:9]{index=9}
+
+export const stopEngine = (id: number) =>
+  getJSON<EngineStartResponse>(apiUrl('/engine', { id, status: 'stopped' })).then(r => r.data); // same endpoint
+
+export const drive = (id: number) =>
+  getJSON<{ success: true }>(apiUrl('/engine', { id, status: 'drive' })).then(r => r.data); // :contentReference[oaicite:10]{index=10}
+
+
+src/shared/api/winners.ts
+
+import { Winner } from '../types';
+import { apiUrl, getJSON } from './base';
+
+export async function getWinners(page: number, limit: number, sort: 'id'|'wins'|'time', order: 'ASC'|'DESC') {
+  const { data, headers } = await getJSON<Winner[]>(
+    apiUrl('/winners', { _page: page, _limit: limit, _sort: sort, _order: order }),
+  ); // :contentReference[oaicite:11]{index=11}
+  const total = Number(headers.get('X-Total-Count') ?? '0'); // :contentReference[oaicite:12]{index=12}
+  return { data, total };
+}
+
+export const getWinner = (id: number) => getJSON<Winner>(apiUrl(`/winners/${id}`)); // :contentReference[oaicite:13]{index=13}
+
+export async function createWinner(payload: Winner) {
+  const { data } = await getJSON<Winner>(apiUrl('/winners'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }); // :contentReference[oaicite:14]{index=14}
+  return data;
+}
+
+export async function updateWinner(id: number, payload: Omit<Winner, 'id'>) {
+  const { data } = await getJSON<Winner>(apiUrl(`/winners/${id}`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }); // :contentReference[oaicite:15]{index=15}
+  return data;
+}
+
+export const deleteWinner = (id: number) =>
+  getJSON<unknown>(apiUrl(`/winners/${id}`), { method: 'DELETE' }); // :contentReference[oaicite:16]{index=16}
+
+5) App scaffolding
+
+src/main.tsx
+
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux';
+import { BrowserRouter } from 'react-router-dom';
+import { store } from './app/store';
+import App from './app/App';
+import './styles/index.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </Provider>
+  </React.StrictMode>,
+);
+
+
+src/app/store.ts
+
+import { configureStore } from '@reduxjs/toolkit';
+import garageReducer from '../features/garage/garageSlice';
+import raceReducer from '../features/race/raceSlice';
+import winnersReducer from '../features/winners/winnersSlice';
+
+export const store = configureStore({
+  reducer: {
+    garage: garageReducer,
+    race: raceReducer,
+    winners: winnersReducer,
+  },
+  middleware: getDefault => getDefault({ serializableCheck: false })
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+
+src/app/hooks.ts
+
+import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import type { RootState, AppDispatch } from './store';
+
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+
+
+src/app/routes.tsx
+
+import { Route, Routes, Navigate } from 'react-router-dom';
+import GaragePage from '../pages/GaragePage';
+import WinnersPage from '../pages/WinnersPage';
+
+const AppRoutes = () => (
+  <Routes>
+    <Route path="/" element={<Navigate to="/garage" replace />} />
+    <Route path="/garage" element={<GaragePage />} />
+    <Route path="/winners" element={<WinnersPage />} />
+  </Routes>
+);
+
+export default AppRoutes;
+
+
+src/app/App.tsx
+
+import AppRoutes from './routes';
+import Header from '../components/Header';
+
+const App = () => (
+  <div className="app">
+    <Header />
+    <AppRoutes />
+  </div>
+);
+
+export default App;
+
+6) Redux – Garage
+
+src/features/garage/garageSlice.ts
+
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { Car } from '../../shared/types';
+import { loadCars, addCar, editCar, removeCar, generateMany } from './thunks';
+
+type Form = { name: string; color: string };
+type GarageState = {
+  items: Car[];
+  total: number;
+  page: number;
+  limit: number;
+  selectedId: number | null;
+  createForm: Form;
+  editForm: Form;
+  loading: boolean;
+};
+
+const initial: GarageState = {
+  items: [],
+  total: 0,
+  page: 1,
+  limit: 7,
+  selectedId: null,
+  createForm: { name: '', color: '#ffffff' },
+  editForm: { name: '', color: '#ffffff' },
+  loading: false,
+};
+
+const slice = createSlice({
+  name: 'garage',
+  initialState: initial,
+  reducers: {
+    setPage: (s, a: PayloadAction<number>) => { s.page = a.payload; },
+    setCreateForm: (s, a: PayloadAction<Form>) => { s.createForm = a.payload; },
+    setEditForm: (s, a: PayloadAction<Form>) => { s.editForm = a.payload; },
+    selectCar: (s, a: PayloadAction<number>) => {
+      s.selectedId = a.payload;
+      const found = s.items.find(c => c.id === a.payload);
+      if (found) s.editForm = { name: found.name, color: found.color };
+    },
+    clearSelection: s => { s.selectedId = null; }
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(loadCars.pending, s => { s.loading = true; })
+      .addCase(loadCars.fulfilled, (s, a) => {
+        s.loading = false;
+        s.items = a.payload.items;
+        s.total = a.payload.total;
+      })
+      .addCase(addCar.fulfilled, (s) => { /* handled by reload */ })
+      .addCase(editCar.fulfilled, (s) => { /* handled by reload */ })
+      .addCase(removeCar.fulfilled, (s) => { /* handled by reload */ })
+      .addCase(generateMany.fulfilled, (s) => { /* handled by reload */ });
+  }
+});
+
+export const { setPage, setCreateForm, setEditForm, selectCar, clearSelection } = slice.actions;
+export default slice.reducer;
+
+
+src/features/garage/thunks.ts
+
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import { createCar, deleteCar, getCars, updateCar } from '../../shared/api/cars';
+import { randomHex } from '../../shared/lib/colors';
+import { randomName } from '../../shared/lib/names';
+import type { RootState } from '../../app/store';
+
+export const loadCars = createAsyncThunk(
+  'garage/load',
+  async (_, { getState }) => {
+    const { page, limit } = (getState() as RootState).garage;
+    const { data, total } = await getCars(page, limit);
+    return { items: data, total };
+  }
+);
+
+export const addCar = createAsyncThunk(
+  'garage/create',
+  async (_: void, { getState, dispatch }) => {
+    const { createForm, page } = (getState() as RootState).garage;
+    if (!createForm.name.trim() || createForm.name.length > 30) return;
+    await createCar({ name: createForm.name.trim(), color: createForm.color });
+    await dispatch(loadCars());
+    // if page changed due to new item, keep current page (server-side order is append)
+  }
+);
+
+export const editCar = createAsyncThunk(
+  'garage/update',
+  async (_: void, { getState, dispatch }) => {
+    const { selectedId, editForm } = (getState() as RootState).garage;
+    if (!selectedId) return;
+    if (!editForm.name.trim() || editForm.name.length > 30) return;
+    await updateCar(selectedId, { name: editForm.name.trim(), color: editForm.color });
+    await dispatch(loadCars());
+  }
+);
+
+export const removeCar = createAsyncThunk(
+  'garage/delete',
+  async (id: number, { getState, dispatch }) => {
+    await deleteCar(id);
+    const { page, limit, total } = (getState() as RootState).garage;
+    const afterDeleteTotal = total - 1;
+    const lastPage = Math.max(1, Math.ceil(afterDeleteTotal / limit));
+    if (page > lastPage) {
+      // Move to previous page if current became empty
+      (await import('./garageSlice')).setPage(lastPage);
+    }
+    await dispatch(loadCars());
+  }
+);
+
+export const generateMany = createAsyncThunk(
+  'garage/generate',
+  async (_: void, { dispatch }) => {
+    const tasks = Array.from({ length: 100 }, () =>
+      createCar({ name: randomName(), color: randomHex() }),
+    );
+    // Run with limited concurrency to be gentle
+    const batch = 10;
+    for (let i = 0; i < tasks.length; i += batch) {
+      // eslint-disable-next-line no-await-in-loop
+      await Promise.all(tasks.slice(i, i + batch));
+    }
+    await dispatch(loadCars());
+  }
+);
+
+7) Redux – Race
+
+src/features/race/raceSlice.ts
+
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+type CarRun = {
+  status: 'idle' | 'started' | 'driving' | 'stopped' | 'broken' | 'finished';
+  progress: number; // 0..1
+  etaMs?: number;
+  startedAt?: number;
+};
+
+type WinnerInfo = { carId: number; name: string; time: number } | null;
+
+type RaceState = {
+  byId: Record<number, CarRun>;
+  global: 'idle' | 'inProgress' | 'finished';
+  winner: WinnerInfo;
+};
+
+const initial: RaceState = { byId: {}, global: 'idle', winner: null };
+
+const slice = createSlice({
+  name: 'race',
+  initialState: initial,
+  reducers: {
+    setRun: (s, a: PayloadAction<{ id: number; run: Partial<CarRun> }>) => {
+      const prev = s.byId[a.payload.id] ?? { status: 'idle', progress: 0 };
+      s.byId[a.payload.id] = { ...prev, ...a.payload.run };
+    },
+    setGlobal: (s, a: PayloadAction<RaceState['global']>) => { s.global = a.payload; },
+    setWinner: (s, a: PayloadAction<WinnerInfo>) => { s.winner = a.payload; },
+    resetAll: () => initial
+  }
+});
+
+export const { setRun, setGlobal, setWinner, resetAll } = slice.actions;
+export default slice.reducer;
+
+
+src/features/race/runner.ts
+
+import { AppDispatch, RootState } from '../../app/store';
+import { startEngine, stopEngine, drive } from '../../shared/api/engine';
+import { setRun, setGlobal, setWinner } from './raceSlice';
+import { loadCars } from '../garage/thunks';
+import { getWinner, createWinner, updateWinner } from '../../shared/api/winners';
+import { getCar } from '../../shared/api/cars';
+
+const FINISH_GUARD = { set: false };
+
+export const startCar = (id: number) => async (dispatch: AppDispatch) => {
+  dispatch(setRun({ id, run: { status: 'started', progress: 0, startedAt: Date.now() } }));
+  try {
+    const r = await startEngine(id); // velocity + distance  :contentReference[oaicite:17]{index=17}
+    const timeSec = r.distance / r.velocity; // seconds
+    const etaMs = Math.round(timeSec * 1000);
+    dispatch(setRun({ id, run: { status: 'driving', etaMs } }));
+
+    // kick drive; may 500 (broken)  :contentReference[oaicite:18]{index=18}
+    drive(id).then(
+      () => {
+        // success: we’ll mark finished when our local timer is done
+      },
+      () => {
+        dispatch(setRun({ id, run: { status: 'broken' } }));
+      },
+    );
+
+    // local timer that matches server time calculation note  :contentReference[oaicite:19]{index=19}
+    setTimeout(() => {
+      if (FINISH_GUARD.set) return;
+      // if car is not broken and still in driving, declare winner
+      dispatch(setRun({ id, run: { status: 'finished', progress: 1 } }));
+      FINISH_GUARD.set = true;
+    }, etaMs);
+  } catch {
+    dispatch(setRun({ id, run: { status: 'broken' } }));
+  }
+};
+
+export const stopCar = (id: number) => async (dispatch: AppDispatch) => {
+  await stopEngine(id);
+  dispatch(setRun({ id, run: { status: 'stopped', progress: 0, etaMs: undefined } }));
+};
+
+export const startRaceAll = () => async (dispatch: AppDispatch, getState: () => RootState) => {
+  FINISH_GUARD.set = false;
+  dispatch(setGlobal('inProgress'));
+  const { items } = getState().garage;
+  await Promise.all(items.map(c => dispatch<any>(startCar(c.id))));
+};
+
+export const resetRaceAll = () => async (dispatch: AppDispatch, getState: () => RootState) => {
+  const { items } = getState().garage;
+  await Promise.all(items.map(c => dispatch<any>(stopCar(c.id))));
+  FINISH_GUARD.set = false;
+  dispatch(setGlobal('idle'));
+  dispatch(setWinner(null));
+};
+
+export const bindWinnerListener = () => (dispatch: AppDispatch, getState: () => RootState) => {
+  // Poll finished states and register the first arrival as "winner" then upsert winners table
+  const tick = () => {
+    const st = getState();
+    if (st.race.global !== 'inProgress') return;
+
+    const finished = Object.entries(st.race.byId).find(([, r]) => r.status === 'finished');
+    if (finished && !st.race.winner) {
+      const [idStr] = finished;
+      const id = Number(idStr);
+      const car = st.garage.items.find(x => x.id === id);
+      const time = (st.race.byId[id]?.etaMs ?? 0) / 1000;
+      dispatch(setWinner({ carId: id, name: car?.name ?? `#${id}`, time }));
+      dispatch(setGlobal('finished'));
+
+      // upsert winner record
+      (async () => {
+        const existing = await getWinner(id).then(r => r.data).catch(() => null);
+        if (!existing) {
+          await createWinner({ id, wins: 1, time }); // :contentReference[oaicite:20]{index=20}
+        } else {
+          const best = Math.min(existing.time, time);
+          await updateWinner(id, { wins: existing.wins + 1, time: best }); // :contentReference[oaicite:21]{index=21}
+        }
+      })();
+    } else {
+      requestAnimationFrame(tick);
+    }
+  };
+  requestAnimationFrame(tick);
+};
+
+8) Redux – Winners
+
+src/features/winners/winnersSlice.ts
+
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { SortField, SortOrder, WinnerRow } from '../../shared/types';
+import { loadWinners } from './thunks';
+
+type WinnersState = {
+  rows: WinnerRow[];
+  total: number;
+  page: number;
+  limit: number;
+  sort: SortField;
+  order: SortOrder;
+  loading: boolean;
+};
+
+const initial: WinnersState = {
+  rows: [],
+  total: 0,
+  page: 1,
+  limit: 10,
+  sort: 'id',
+  order: 'ASC',
+  loading: false,
+};
+
+const slice = createSlice({
+  name: 'winners',
+  initialState: initial,
+  reducers: {
+    setWinnersPage: (s, a: PayloadAction<number>) => { s.page = a.payload; },
+    setSort: (s, a: PayloadAction<{ sort: SortField; order: SortOrder }>) => {
+      s.sort = a.payload.sort;
+      s.order = a.payload.order;
+    }
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(loadWinners.pending, s => { s.loading = true; })
+      .addCase(loadWinners.fulfilled, (s, a) => {
+        s.loading = false;
+        s.rows = a.payload.rows;
+        s.total = a.payload.total;
+      });
+  }
+});
+
+export const { setWinnersPage, setSort } = slice.actions;
+export default slice.reducer;
+
+
+src/features/winners/thunks.ts
+
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import { getCar } from '../../shared/api/cars';
+import { getWinners } from '../../shared/api/winners';
+import type { RootState } from '../../app/store';
+import type { WinnerRow } from '../../shared/types';
+
+export const loadWinners = createAsyncThunk(
+  'winners/load',
+  async (_, { getState }) => {
+    const { page, limit, sort, order } = (getState() as RootState).winners;
+    const { data, total } = await getWinners(page, limit, sort, order);
+    const rows: WinnerRow[] = await Promise.all(
+      data.map(async w => {
+        const car = (await getCar(w.id)).data;
+        return { ...w, car: { name: car.name, color: car.color } };
+      }),
+    );
+    return { rows, total };
+  }
+);
+
+9) Components & Pages
+
+src/components/Header.tsx
+
+import { NavLink, useLocation } from 'react-router-dom';
+
+const Header = () => {
+  const { pathname } = useLocation();
+  return (
+    <header className="header">
+      <nav className="header__nav">
+        <NavLink to="/garage" className={`btn nav ${pathname === '/garage' ? 'active' : ''}`}>
+          GARAGE
+        </NavLink>
+        <NavLink to="/winners" className={`btn nav ${pathname === '/winners' ? 'active' : ''}`}>
+          WINNERS
+        </NavLink>
+      </nav>
+      <div className="logo">ASYNC<br />RACE</div>
+    </header>
+  );
+};
+export default Header;
+
+
+src/components/Pagination.tsx
+
+type Props = { page: number; total: number; limit: number; onChange: (p: number) => void };
+const Pagination = ({ page, total, limit, onChange }: Props) => {
+  const pages = Math.max(1, Math.ceil(total / limit));
+  return (
+    <div className="pagination">
+      <button className="btn small" disabled={page <= 1} onClick={() => onChange(page - 1)}>
+        ‹
+      </button>
+      <span>{`PAGE #${page}`}</span>
+      <button className="btn small" disabled={page >= pages} onClick={() => onChange(page + 1)}>
+        ›
+      </button>
+    </div>
+  );
+};
+export default Pagination;
+
+
+src/components/ControlsBar.tsx
+
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { addCar, editCar, generateMany, loadCars } from '../features/garage/thunks';
+import { setCreateForm, setEditForm } from '../features/garage/garageSlice';
+import { bindWinnerListener, resetRaceAll, startRaceAll } from '../features/race/runner';
+
+const ControlsBar = () => {
+  const d = useAppDispatch();
+  const { createForm, editForm, selectedId } = useAppSelector(s => s.garage);
+  const { global } = useAppSelector(s => s.race);
+
+  return (
+    <section className="controls">
+      <div className="cluster">
+        <button
+          className="btn primary"
+          disabled={global === 'inProgress'}
+          onClick={() => { d(startRaceAll() as any); d(bindWinnerListener() as any); }}
+        >RACE</button>
+        <button className="btn" onClick={() => d(resetRaceAll() as any)}>RESET</button>
+      </div>
+
+      <div className="cluster">
+        <input
+          className="input"
+          placeholder="TYPE CAR BRAND"
+          value={createForm.name}
+          onChange={e => d(setCreateForm({ ...createForm, name: e.target.value }))}
+        />
+        <input
+          type="color"
+          className="picker"
+          value={createForm.color}
+          onChange={e => d(setCreateForm({ ...createForm, color: e.target.value }))}
+        />
+        <button className="btn" onClick={() => d(addCar() as any)}>CREATE</button>
+      </div>
+
+      <div className="cluster">
+        <input
+          className="input"
+          placeholder="TYPE CAR BRAND"
+          value={editForm.name}
+          onChange={e => d(setEditForm({ ...editForm, name: e.target.value }))}
+          disabled={!selectedId}
+        />
+        <input
+          type="color"
+          className="picker"
+          value={editForm.color}
+          onChange={e => d(setEditForm({ ...editForm, color: e.target.value }))}
+          disabled={!selectedId}
+        />
+        <button className="btn" disabled={!selectedId} onClick={() => d(editCar() as any)}>
+          UPDATE
+        </button>
+      </div>
+
+      <button className="btn success" onClick={() => d(generateMany() as any)}>
+        GENERATE CARS
+      </button>
+
+      <button className="btn subtle" onClick={() => d(loadCars() as any)}>↻</button>
+    </section>
+  );
+};
+
+export default ControlsBar;
+
+
+src/components/Track.tsx
+
+type Props = { progress: number; color: string };
+const Track = ({ progress, color }: Props) => (
+  <div className="track">
+    <div className="start">START</div>
+    <div className="finish">FINISH</div>
+    <div className="car" style={{ transform: `translateX(${progress * 92}%)`, color }}>
+      {/* icon via CSS */}
+      <div className="car__body" />
+    </div>
+  </div>
+);
+export default Track;
+
+
+src/components/CarRow.tsx
+
+import clsx from 'clsx';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { selectCar, clearSelection, removeCar } from '../features/garage/garageSlice';
+import { startCar, stopCar } from '../features/race/runner';
+import type { Car } from '../shared/types';
+
+type Props = { car: Car };
+
+const CarRow = ({ car }: Props) => {
+  const d = useAppDispatch();
+  const { selectedId } = useAppSelector(s => s.garage);
+  const run = useAppSelector(s => s.race.byId[car.id]);
+  const global = useAppSelector(s => s.race.global);
+  const isSelected = selectedId === car.id;
+  const status = run?.status ?? 'idle';
+
+  return (
+    <div className="car-row">
+      <div className="car-row__buttons">
+        <button className="btn small" onClick={() => d(isSelected ? clearSelection() : selectCar(car.id))}>
+          SELECT
+        </button>
+        <button
+          className="btn small danger"
+          disabled={global === 'inProgress'}
+          onClick={() => d(removeCar(car.id) as any)}
+        >
+          REMOVE
+        </button>
+        <button
+          className={clsx('btn small', status === 'driving' && 'disabled')}
+          disabled={status === 'driving' || global === 'finished'}
+          onClick={() => d(startCar(car.id) as any)}
+        >
+          A
+        </button>
+        <button
+          className="btn small"
+          disabled={status === 'idle' || status === 'stopped'}
+          onClick={() => d(stopCar(car.id) as any)}
+        >
+          B
+        </button>
+      </div>
+
+      <div className="car-row__name" style={{ color: car.color }}>{car.name}</div>
+      <div className="car-row__track">
+        <div className="lane">
+          <div
+            className="car-sprite"
+            style={{ left: `${(run?.progress ?? 0) * 92}%`, borderColor: car.color }}
+          />
+          <div className="finish-line" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CarRow;
+
+
+src/components/WinnerOverlay.tsx
+
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { resetRaceAll, startRaceAll, bindWinnerListener } from '../features/race/runner';
+import { setGlobal, setWinner } from '../features/race/raceSlice';
+
+const WinnerOverlay = () => {
+  const d = useAppDispatch();
+  const winner = useAppSelector(s => s.race.winner);
+  const visible = !!winner;
+
+  if (!visible) return null;
+  return (
+    <div className="overlay">
+      <div className="overlay__card">
+        <div className="overlay__title">WINNER:</div>
+        <div className="overlay__name">{winner?.name}</div>
+        <div className="overlay__time">TIME: {winner?.time.toFixed(2)} s</div>
+        <div className="overlay__actions">
+          <button className="btn" onClick={() => { d(setWinner(null)); d(resetRaceAll() as any); }}>
+            Reset
+          </button>
+          <button
+            className="btn primary"
+            onClick={() => {
+              d(setWinner(null));
+              d(setGlobal('idle'));
+              d(startRaceAll() as any);
+              d(bindWinnerListener() as any);
+            }}
+          >
+            Start a new race
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+export default WinnerOverlay;
+
+
+src/components/WinnersTable.tsx
+
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { loadWinners } from '../features/winners/thunks';
+import { setSort, setWinnersPage } from '../features/winners/winnersSlice';
+import Pagination from './Pagination';
+
+const WinnersTable = () => {
+  const d = useAppDispatch();
+  const { rows, total, page, limit, sort, order } = useAppSelector(s => s.winners);
+
+  const toggleSort = (field: 'wins' | 'time') => {
+    const nextOrder = sort === field && order === 'ASC' ? 'DESC' : 'ASC';
+    d(setSort({ sort: field, order: nextOrder }));
+    d(loadWinners() as any);
+  };
+
+  return (
+    <section className="winners">
+      <div className="winners__header">
+        <h2>WINNERS</h2>
+        <div className="sorts">
+          <button className="btn small" onClick={() => toggleSort('wins')}>Sort by wins</button>
+          <button className="btn small" onClick={() => toggleSort('time')}>Sort by best time</button>
+        </div>
+      </div>
+
+      <table className="table">
+        <thead>
+          <tr><th>№</th><th>CAR</th><th>NAME</th><th>WINS</th><th>BEST TIME (SECONDS)</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((w, idx) => (
+            <tr key={w.id}>
+              <td>{(page - 1) * limit + idx + 1}</td>
+              <td><div className="car-chip" style={{ borderColor: w.car.color }} /></td>
+              <td>{w.car.name}</td>
+              <td>{w.wins}</td>
+              <td>{w.time.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <Pagination
+        page={page}
+        total={total}
+        limit={limit}
+        onChange={p => { d(setWinnersPage(p)); d(loadWinners() as any); }}
+      />
+    </section>
+  );
+};
+
+export default WinnersTable;
+
+10) Pages
+
+src/pages/GaragePage.tsx
+
+import { useEffect } from 'react';
+import ControlsBar from '../components/ControlsBar';
+import CarRow from '../components/CarRow';
+import Pagination from '../components/Pagination';
+import WinnerOverlay from '../components/WinnerOverlay';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { loadCars } from '../features/garage/thunks';
+import { setPage } from '../features/garage/garageSlice';
+
+const GaragePage = () => {
+  const d = useAppDispatch();
+  const { items, total, page, limit } = useAppSelector(s => s.garage);
+
+  useEffect(() => { d(loadCars() as any); }, [d, page]);
+
+  return (
+    <main className="page garage">
+      <ControlsBar />
+      <section className="garage__list">
+        {items.length === 0 ? (
+          <div className="empty">No Cars</div>
+        ) : (
+          items.map(car => <CarRow key={car.id} car={car} />)
+        )}
+      </section>
+      <div className="garage__footer">
+        <div className="count">GARAGE ({total})</div>
+        <Pagination
+          page={page}
+          total={total}
+          limit={limit}
+          onChange={p => d(setPage(p))}
+        />
+      </div>
+      <WinnerOverlay />
+    </main>
+  );
+};
+
+export default GaragePage;
+
+
+src/pages/WinnersPage.tsx
+
+import { useEffect } from 'react';
+import WinnersTable from '../components/WinnersTable';
+import { useAppDispatch } from '../app/hooks';
+import { loadWinners } from '../features/winners/thunks';
+
+const WinnersPage = () => {
+  const d = useAppDispatch();
+  useEffect(() => { d(loadWinners() as any); }, [d]);
+
+  return (
+    <main className="page winners">
+      <WinnersTable />
+    </main>
+  );
+};
+export default WinnersPage;
+
+11) Styles (neon + responsive)
+
+src/styles/variables.css
+
+:root{
+  --bg:#0b1730;
+  --panel:#0f2146;
+  --accent:#9d4cff;
+  --accent2:#23d6e7;
+  --text:#e8e8ff;
+  --muted:#7a87a6;
+  --good:#00c853;
+  --bad:#ff5252;
+}
+
+
+src/styles/index.css
+
+@import './variables.css';
+*{box-sizing:border-box}
+html,body,#root{height:100%}
+body{margin:0;background:var(--bg);font-family:Inter,system-ui,Arial;color:var(--text)}
+
+.app{max-width:1200px;margin:0 auto;padding:16px}
+
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.header__nav{display:flex;gap:12px}
+.btn{border:1px solid var(--accent);background:transparent;color:var(--text);padding:10px 14px;border-radius:10px;cursor:pointer;transition:0.2s}
+.btn:hover{box-shadow:0 0 12px var(--accent)}
+.btn.primary{border-color:var(--accent2)}
+.btn.success{border-color:var(--good)}
+.btn.danger{border-color:var(--bad)}
+.btn.small{padding:6px 8px;font-size:.9rem}
+.btn.nav{font-weight:700}
+.btn.nav.active{box-shadow:0 0 18px var(--accent2)}
+
+.controls{display:grid;grid-template-columns:1fr 2fr 2fr auto auto;gap:12px;margin-bottom:12px}
+.controls .cluster{display:flex;gap:8px;align-items:center}
+.input{padding:10px 12px;border-radius:8px;border:1px solid var(--muted);background:transparent;color:var(--text);min-width:180px}
+.picker{width:28px;height:28px;border:1px solid var(--muted);border-radius:6px;background:transparent}
+
+.page.garage .garage__list{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.car-row{display:grid;grid-template-columns:160px 1fr 3fr;align-items:center;gap:10px;
+  background:linear-gradient( to right, rgba(157,76,255,.08), transparent);
+  border:1px solid rgba(157,76,255,.3); padding:10px;border-radius:14px}
+.car-row__buttons{display:grid;grid-template-columns:repeat(4,auto);gap:6px}
+.car-row__name{font-size:1.2rem;letter-spacing:.1em;opacity:.9}
+.car-row__track .lane{position:relative;height:56px;border-top:2px dashed #fff2;border-bottom:2px dashed #fff2}
+.car-sprite{position:absolute;top:10px;left:0;width:64px;height:32px;border:3px solid var(--accent2);border-radius:24px;box-shadow:0 0 12px var(--accent2) inset, 0 0 12px var(--accent2)}
+.finish-line{position:absolute;right:0;top:0;height:100%;width:4px;background:linear-gradient(#0f0,#0f0 50%,transparent 50%);background-size:4px 16px}
+
+.garage__footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.count{font-size:1.4rem;letter-spacing:.15em;color:var(--accent2);text-shadow:0 0 10px var(--accent2)}
+.pagination{display:flex;align-items:center;gap:8px}
+.pagination span{opacity:.9;letter-spacing:.2em}
+
+.overlay{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;z-index:50}
+.overlay__card{background:var(--panel);padding:24px;border-radius:16px;border:1px solid var(--accent2);text-align:center;min-width:320px;box-shadow:0 0 24px var(--accent2)}
+.overlay__title{font-size:1.2rem;color:var(--muted)}
+.overlay__name{font-size:2rem;letter-spacing:.2em;margin:8px 0}
+.overlay__time{opacity:.8;margin-bottom:10px}
+
+.table{width:100%;border-collapse:collapse;background:transparent}
+.table th,.table td{border-bottom:1px solid #fff2;padding:10px;text-align:left}
+.car-chip{width:52px;height:26px;border:3px solid var(--accent);border-radius:24px;box-shadow:0 0 10px var(--accent) inset}
+
+@media (max-width: 700px){
+  .controls{grid-template-columns:1fr}
+  .car-row{grid-template-columns:1fr}
+  .car-row__track .lane{height:48px}
+}
+
+12) Behavior that matches the spec
+
+Garage CRUD + color picker + random 100 cars: createCar, updateCar, deleteCar, “Generate Cars” (100) with throttled batches. Cars list paginated (7/page) using backend _page/_limit and X-Total-Count. 
+ 
+ 
+ 
+
+Race flow:
+
+Start per car: PATCH /engine?id=&status=started → get velocity & distance. Compute timeSec = distance / velocity; animate and call drive. If drive returns 500, stop (broken). 
+ 
+
+Start all: “RACE” triggers startRaceAll for every visible car.
+
+Reset all: “RESET” triggers stopEngine for each.
+
+Button states are conditionally disabled (e.g., A disabled while driving, Delete disabled during global race).
+
+Winner overlay persists until Reset / Start new race.
+
+Actions during race are predictable (Delete/Update disabled globally during race).
+
+Winners page:
+
+Populates after any race via winners upsert: create or update with incremented wins; time updates only if better. 
+ 
+
+Pagination (10/page) + sorting on server (_sort, _order) across entire dataset. 
+
+Persistence between views: Redux keeps the current Garage page, forms, selection; Winners keeps page/sort/order.
+
+Responsive animations: layout scales to 500px widths (track keeps car inside bounds).
+
+Empty garage states: visible “No Cars” message; removing last item on a page moves to previous page.
+
+
+
+
+__SETUP__
+1) Scaffold
+# in your target folder
+npx create-vite@latest . -- --template react-ts
+git init -b main
+
+2) Install deps
+npm i react-router-dom @reduxjs/toolkit react-redux clsx
+
+# ESLint + Prettier (+ Airbnb TS)
+npm i -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin `
+  eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y `
+  eslint-plugin-import eslint-config-airbnb eslint-config-airbnb-typescript `
+  eslint-config-prettier prettier prettier-plugin-organize-imports
+
+3) Add scripts (package.json)
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write .",
+    "ci:format": "prettier --check .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}
+
+4) Drop in the configs & source code
+
+Use the tsconfig, .eslintrc.cjs, .prettierrc.json, .env.sample, and all src/** files I provided earlier (unchanged).
+
+Copy .env.sample → .env and keep VITE_API_BASE_URL=http://127.0.0.1:3000.
+
+5) Run
+npm run dev
+
+
+All pnpm commands from my earlier guide map 1:1 to npm:
+
+pnpm add X → npm i X
+
+pnpm add -D X → npm i -D X
+
+pnpm dev → npm run dev
+
+pnpm lint/format/typecheck → npm run lint etc.
