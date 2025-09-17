@@ -1,57 +1,66 @@
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { clearSelection, selectCar } from '../features/garage/garageSlice';
-import { removeCar as removeCarThunk } from '../features/garage/thunks';
-import { startCar, stopCar } from '../features/race/runner';
-import type { Car } from '../shared/types';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { clearSelection, selectCar } from '../../features/garage/garageSlice';
+import { removeCar as removeCarThunk } from '../../features/garage/thunks';
+import { startCar, stopCar } from '../../features/race/runner';
+import type { Car } from '../../shared/types';
+import './CarRow.css';
 
 type Props = { car: Car };
 
+// Constants for responsive track widths
+const TRACK_WIDTH_DESKTOP = 92;
+const TRACK_WIDTH_TABLET = 86;
+const TRACK_WIDTH_MOBILE = 80;
+
 const CarRow = ({ car }: Props) => {
   const dispatch = useAppDispatch();
-  const { selectedId } = useAppSelector(s => s.garage);
-  const run = useAppSelector(s => s.race.byId[car.id]);
-  const global = useAppSelector(s => s.race.global);
+  const { selectedCarId } = useAppSelector(state => state.garage);
+  const carRun = useAppSelector(state => state.race.byId[car.id]);
+  const globalRaceStatus = useAppSelector(state => state.race.global);
 
-  const isSelected = selectedId === car.id;
-  const status = run?.status ?? 'idle';
+  const isSelected = selectedCarId === car.id;
+  const status = carRun?.status ?? 'idle';
 
   // race lock: when a global race is running we freeze row actions
-  const isRaceLocked = global === 'inProgress';
+  const isRaceLocked = globalRaceStatus === 'inProgress';
 
   // Button enable/disable rules
   const canSelect = !isRaceLocked;
   const canRemove = !isRaceLocked;
-  const canStart = !isRaceLocked && status !== 'driving' && global !== 'finished';
+  const canStart = !isRaceLocked && status !== 'driving' && globalRaceStatus !== 'finished';
   const canStop = !isRaceLocked && !(status === 'idle' || status === 'stopped');
 
   // Responsive cap so the car never overflows the row
-  const [maxPct, setMaxPct] = useState<number>(92); // Desktop
+  const [maxTrackPercent, setMaxTrackPercent] = useState<number>(TRACK_WIDTH_DESKTOP);
+
   useEffect(() => {
-    const apply = () => {
-      const w = window.innerWidth;
-      if (w <= 420) setMaxPct(80);
-      else if (w <= 640) setMaxPct(86);
-      else setMaxPct(92);
+    const updateTrackWidth = () => {
+      const width = window.innerWidth;
+      if (width <= 420) setMaxTrackPercent(TRACK_WIDTH_MOBILE);
+      else if (width <= 640) setMaxTrackPercent(TRACK_WIDTH_TABLET);
+      else setMaxTrackPercent(TRACK_WIDTH_DESKTOP);
     };
-    apply();
-    window.addEventListener('resize', apply);
-    return () => window.removeEventListener('resize', apply);
+    updateTrackWidth();
+    window.addEventListener('resize', updateTrackWidth);
+    return () => window.removeEventListener('resize', updateTrackWidth);
   }, []);
-  const leftPct = ((run?.progress ?? 0) * maxPct).toFixed(3);
+
+  const leftPercent = ((carRun?.progress ?? 0) * maxTrackPercent).toFixed(3);
 
   // helper to add a locked style when disabled
-  const btnCx = (base: string, enabled: boolean) => clsx(base, !enabled && 'btn--locked');
+  const getButtonClasses = (baseClass: string, isEnabled: boolean) =>
+    clsx(baseClass, !isEnabled && 'btn--locked');
 
-  // --- tooltips without nested ternaries ---
-  const startTitle = (() => {
+  // Tooltips
+  const startButtonTitle = (() => {
     if (isRaceLocked) return 'Disabled during the race';
     if (status === 'driving') return 'Already driving';
     return 'Start';
   })();
 
-  const stopTitle = (() => {
+  const stopButtonTitle = (() => {
     if (isRaceLocked) return 'Disabled during the race';
     if (status === 'idle' || status === 'stopped') return 'Car is at start';
     return 'Stop';
@@ -59,12 +68,11 @@ const CarRow = ({ car }: Props) => {
 
   return (
     <div className="car-row">
-      {/* top line: buttons + name (no overlap) */}
       <div className="car-row__top">
         <div className="car-row__buttons">
           <button
             type="button"
-            className={btnCx('btn small', canSelect)}
+            className={getButtonClasses('btn small', canSelect)}
             disabled={!canSelect}
             title={isRaceLocked ? 'Disabled during the race' : 'Select'}
             onClick={() => dispatch(isSelected ? clearSelection() : selectCar(car.id))}
@@ -74,7 +82,7 @@ const CarRow = ({ car }: Props) => {
 
           <button
             type="button"
-            className={btnCx('btn small danger', canRemove)}
+            className={getButtonClasses('btn small danger', canRemove)}
             disabled={!canRemove}
             title={isRaceLocked ? 'Disabled during the race' : 'Remove'}
             onClick={() => dispatch(removeCarThunk(car.id))}
@@ -84,9 +92,9 @@ const CarRow = ({ car }: Props) => {
 
           <button
             type="button"
-            className={btnCx('btn small', canStart)}
+            className={getButtonClasses('btn small', canStart)}
             disabled={!canStart}
-            title={startTitle}
+            title={startButtonTitle}
             onClick={() => dispatch(startCar(car.id))}
             aria-label="Start engine"
           >
@@ -95,9 +103,9 @@ const CarRow = ({ car }: Props) => {
 
           <button
             type="button"
-            className={btnCx('btn small', canStop)}
+            className={getButtonClasses('btn small', canStop)}
             disabled={!canStop}
-            title={stopTitle}
+            title={stopButtonTitle}
             onClick={() => dispatch(stopCar(car.id))}
             aria-label="Stop engine"
           >
@@ -110,20 +118,16 @@ const CarRow = ({ car }: Props) => {
         </div>
       </div>
 
-      {/* optional hint when locked */}
       {isRaceLocked && <div className="race-lock-hint">Disabled during the race</div>}
 
-      {/* track line */}
       <div className="car-row__track">
         <div className="lane">
           <div
             className={clsx('car-sprite', status === 'broken' && 'broken')}
-            style={{ left: `${leftPct}%`, borderColor: car.color }}
+            style={{ left: `${leftPercent}%`, borderColor: car.color }}
           >
             {status === 'broken' && <div className="car-broken-cross">✖</div>}
           </div>
-
-          {/* finish line slightly shifted left */}
           <div className="finish-line" style={{ right: '10px' }} />
         </div>
       </div>

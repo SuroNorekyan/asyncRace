@@ -8,7 +8,7 @@ export const store = configureStore({
     garage: garageReducer,
     race: raceReducer,
     winners: winnersReducer,
-  },
+  }, 
   middleware: getDefault => getDefault({ serializableCheck: false }),
 });
 

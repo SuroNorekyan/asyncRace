@@ -1,3 +1,5 @@
+import './Pagination.css';
+
 type Props = { page: number; total: number; limit: number; onChange: (p: number) => void };
 const Pagination = ({ page, total, limit, onChange }: Props) => {
   const pages = Math.max(1, Math.ceil(total / limit));

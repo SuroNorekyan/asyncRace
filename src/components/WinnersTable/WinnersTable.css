@@ -1,0 +1,16 @@
+.winners {
+  margin-top: 20px;
+}
+.winners__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.winners__header h2 {
+  margin: 0;
+}
+.winners__header .sorts {
+  display: flex;
+  gap: 8px;
+}

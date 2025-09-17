@@ -1,7 +1,7 @@
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { loadWinners } from '../features/winners/thunks';
-import { setSort, setWinnersPage } from '../features/winners/winnersSlice';
-import Pagination from './Pagination';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { loadWinners } from '../../features/winners/thunks';
+import { setSort, setWinnersPage } from '../../features/winners/winnersSlice';
+import Pagination from '../Pagination/Pagination';
 
 const WinnersTable = () => {
   const d = useAppDispatch();

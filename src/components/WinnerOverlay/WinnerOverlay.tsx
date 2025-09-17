@@ -1,6 +1,7 @@
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { setGlobal, setWinner } from '../features/race/raceSlice';
-import { bindWinnerListener, resetRaceAll, startRaceAll } from '../features/race/runner';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { setGlobal, setWinner } from '../../features/race/raceSlice';
+import { bindWinnerListener, resetRaceAll, startRaceAll } from '../../features/race/runner';
+import './WinnerOverlay.css';
 
 const WinnerOverlay = () => {
   const d = useAppDispatch();

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import WinnersTable from '../components/WinnersTable';
+import WinnersTable from '../components/WinnersTable/WinnersTable';
 import { loadWinners } from '../features/winners/thunks';
 
 const WinnersPage = () => {

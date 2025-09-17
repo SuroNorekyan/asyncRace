@@ -3,17 +3,27 @@ import { drive, startEngine, stopEngine } from '../../shared/api/engine';
 import { createWinner, getWinner, updateWinner } from '../../shared/api/winners';
 import { setGlobal, setRun, setWinner } from './raceSlice';
 
-const RACE_SPEED_MULT = Number(import.meta.env.VITE_SPEED_MULT ?? 240);
-const MIN_ANIM_MS = Number(import.meta.env.VITE_MIN_ANIM_MS ?? 600); // avoid teleports
-const PROGRESS_FPS = Number(import.meta.env.VITE_PROGRESS_FPS ?? 20); // throttle Redux updates
-const TICK_INTERVAL = Math.max(1000 / Math.min(60, Math.max(10, PROGRESS_FPS)), 12); // clamp 10..60fps
+// Constants with fallback defaults
+const DEFAULT_SPEED_MULTIPLIER = 240;
+const DEFAULT_MIN_ANIMATION_MS = 600; // Prevent instant teleport
+const DEFAULT_PROGRESS_FPS = 20; // Default frames per second
+const MIN_FPS = 10;
+const MAX_FPS = 60;
+const MIN_TICK_INTERVAL = 12; // Lower bound for interval ms
+
+const RACE_SPEED_MULTIPLIER = Number(import.meta.env.VITE_SPEED_MULT ?? DEFAULT_SPEED_MULTIPLIER);
+const MIN_ANIMATION_MS = Number(import.meta.env.VITE_MIN_ANIM_MS ?? DEFAULT_MIN_ANIMATION_MS);
+const PROGRESS_FPS = Number(import.meta.env.VITE_PROGRESS_FPS ?? DEFAULT_PROGRESS_FPS);
+
+const TICK_INTERVAL = Math.max(
+  1000 / Math.min(MAX_FPS, Math.max(MIN_FPS, PROGRESS_FPS)),
+  MIN_TICK_INTERVAL,
+);
 
 function computeEtaMs(distance: number, velocity: number): number {
-  // Boost backend velocity, but keep per-car differences
-  const boosted = velocity * Math.max(1, RACE_SPEED_MULT);
-  const eta = (distance / boosted) * 1000;
-  // Ensure at least MIN_ANIM_MS so we get multiple frames
-  return Math.max(MIN_ANIM_MS, Math.round(eta));
+  const boostedVelocity = velocity * Math.max(1, RACE_SPEED_MULTIPLIER);
+  const etaMs = (distance / boostedVelocity) * 1000;
+  return Math.max(MIN_ANIMATION_MS, Math.round(etaMs));
 }
 
 type Timers = { raf?: number; finish?: number; lastTick?: number };
@@ -38,23 +48,21 @@ export const startCar =
 
       dispatch(setRun({ id, run: { status: 'driving', etaMs, startedAt } }));
 
-      // Throttled rAF progress loop (avoid React re-render overload)
       const loop = () => {
-        const state = getState().race.byId[id];
-        if (!state || state.status !== 'driving' || !state.startedAt || !state.etaMs) return;
+        const carState = getState().race.byId[id];
+        if (!carState || carState.status !== 'driving' || !carState.startedAt || !carState.etaMs)
+          return;
 
         const now = Date.now();
-        const t = Math.min(1, (now - state.startedAt) / state.etaMs);
+        const progress = Math.min(1, (now - carState.startedAt) / carState.etaMs);
 
-        const prev = timers[id] ?? {};
-        const last = prev.lastTick ?? 0;
-        if (now - last >= TICK_INTERVAL) {
-          // update lastTick only when we dispatch
-          timers[id] = { ...prev, lastTick: now };
-          dispatch(setRun({ id, run: { progress: t } }));
+        const prevTimers = timers[id] ?? {};
+        const lastTick = prevTimers.lastTick ?? 0;
+        if (now - lastTick >= TICK_INTERVAL) {
+          timers[id] = { ...prevTimers, lastTick: now };
+          dispatch(setRun({ id, run: { progress } }));
         } else {
-          // keep timers object stable
-          timers[id] = { ...prev };
+          timers[id] = { ...prevTimers };
         }
 
         timers[id]!.raf = requestAnimationFrame(loop);
@@ -62,18 +70,16 @@ export const startCar =
 
       timers[id] = { raf: requestAnimationFrame(loop), lastTick: 0 };
 
-      // Backend "drive" may 500 → broken (freeze where it stopped)
       drive(id).catch(() => {
         clearTimers(id);
-        const st = getState().race.byId[id];
-        dispatch(setRun({ id, run: { status: 'broken', progress: st?.progress ?? 0 } }));
+        const carState = getState().race.byId[id];
+        dispatch(setRun({ id, run: { status: 'broken', progress: carState?.progress ?? 0 } }));
       });
 
-      // Finish after ETA if still driving
       if (!timers[id]) timers[id] = {};
       timers[id]!.finish = window.setTimeout(() => {
-        const state = getState().race.byId[id];
-        if (state?.status === 'driving') {
+        const carState = getState().race.byId[id];
+        if (carState?.status === 'driving') {
           dispatch(setRun({ id, run: { status: 'finished', progress: 1 } }));
         }
         clearTimers(id);
@@ -87,15 +93,12 @@ export const startCar =
 export const stopCar = (id: number) => async (dispatch: AppDispatch) => {
   clearTimers(id);
   await stopEngine(id).catch(() => {});
-  // snap back to start (omit optional fields instead of setting undefined)
   dispatch(setRun({ id, run: { status: 'idle', progress: 0 } }));
 };
 
 export const startRaceAll = () => async (dispatch: AppDispatch, getState: () => RootState) => {
   dispatch(setWinner(null));
   dispatch(setGlobal('inProgress'));
-
-  // race only cars on current page (assignment requirement)
   const cars = getState().garage.items;
   await Promise.all(cars.map(c => dispatch(startCar(c.id))));
 };
@@ -106,7 +109,6 @@ export const resetRaceAll = () => async (dispatch: AppDispatch, getState: () => 
     cars.map(async c => {
       clearTimers(c.id);
       await stopEngine(c.id).catch(() => {});
-      // set to idle; omit etaMs/startedAt to satisfy exactOptionalPropertyTypes
       dispatch(setRun({ id: c.id, run: { status: 'idle', progress: 0 } }));
     }),
   );
@@ -116,27 +118,27 @@ export const resetRaceAll = () => async (dispatch: AppDispatch, getState: () => 
 
 export const bindWinnerListener = () => (dispatch: AppDispatch, getState: () => RootState) => {
   const tick = () => {
-    const st = getState();
-    if (st.race.global !== 'inProgress') return;
+    const state = getState();
+    if (state.race.global !== 'inProgress') return;
 
-    const finished = Object.entries(st.race.byId).find(([, r]) => r.status === 'finished');
-    if (finished && !st.race.winner) {
+    const finished = Object.entries(state.race.byId).find(([, r]) => r.status === 'finished');
+    if (finished && !state.race.winner) {
       const id = Number(finished[0]);
-      const name = st.garage.items.find(x => x.id === id)?.name ?? `#${id}`;
-      const time = (st.race.byId[id]?.etaMs ?? 0) / 1000;
+      const carName = state.garage.items.find(x => x.id === id)?.name ?? `#${id}`;
+      const finishTime = (state.race.byId[id]?.etaMs ?? 0) / 1000;
 
-      dispatch(setWinner({ carId: id, name, time }));
+      dispatch(setWinner({ carId: id, name: carName, time: finishTime }));
       dispatch(setGlobal('finished'));
 
       (async () => {
         const existing = await getWinner(id)
           .then(r => r.data)
           .catch(() => null);
-        if (!existing) await createWinner({ id, wins: 1, time });
+        if (!existing) await createWinner({ id, wins: 1, time: finishTime });
         else
           await updateWinner(id, {
             wins: existing.wins + 1,
-            time: Math.min(existing.time, time),
+            time: Math.min(existing.time, finishTime),
           });
       })();
     } else {

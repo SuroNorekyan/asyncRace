@@ -1,0 +1,29 @@
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr auto;
+  gap: 12px;
+  margin-bottom: 12px;
+  position: sticky;
+  top: calc(var(--header-h) + 8px);
+  z-index: 40;
+  background: linear-gradient(180deg, rgba(22, 22, 35, 0.85), rgba(22, 22, 35, 0.6));
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(157, 76, 255, 0.32);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 6px 24px rgba(157, 76, 255, 0.12);
+}
+.controls .cluster {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.cluster--tight .btn {
+  min-width: 110px;
+}
+.controls__lock {
+  font-size: 0.95rem;
+  opacity: 0.8;
+  margin-bottom: 6px;
+}

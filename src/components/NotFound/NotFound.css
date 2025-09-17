@@ -1,0 +1,12 @@
+.not-found {
+  text-align: center;
+  padding: 40px;
+}
+.not-found h2 {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+.not-found p {
+  opacity: 0.8;
+  margin-bottom: 20px;
+}

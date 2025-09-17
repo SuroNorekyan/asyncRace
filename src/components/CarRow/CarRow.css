@@ -1,0 +1,116 @@
+.car-row {
+  display: grid;
+  grid-template-rows: auto 1fr; /* buttons+name row, then the track */
+  gap: 10px;
+  background: linear-gradient(to right, rgba(157, 76, 255, 0.08), transparent);
+  border: 1px solid rgba(157, 76, 255, 0.3);
+  padding: 10px;
+  border-radius: 14px;
+  position: relative;
+  z-index: 1; /* stay below sticky controls */
+}
+
+.car-row__top {
+  display: grid;
+  grid-template-columns: auto 1fr; /* buttons on left, name on right */
+  align-items: center;
+  gap: 12px;
+}
+
+.car-row__buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.car-row__name {
+  min-width: 0;
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Track visuals */
+.car-row__track .lane {
+  position: relative;
+  height: 56px;
+  border-top: 2px dashed #fff2;
+  border-bottom: 2px dashed #fff2;
+}
+.car-sprite {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  width: 64px;
+  height: 32px;
+  border: 3px solid var(--accent2);
+  border-radius: 24px;
+  box-shadow:
+    0 0 12px var(--accent2) inset,
+    0 0 12px var(--accent2);
+}
+.finish-line {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: linear-gradient(#0f0, #0f0 50%, transparent 50%);
+  background-size: 4px 16px;
+}
+
+/* Decorative tracks shouldn't intercept clicks */
+.car-row__track,
+.car-row__track .lane {
+  pointer-events: none;
+}
+
+/* Broken Engine Styling */
+.car-sprite.broken {
+  position: relative;
+  box-shadow:
+    0 0 20px red inset,
+    0 0 20px red;
+  border-color: red !important;
+}
+.car-broken-cross {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: red;
+  text-shadow:
+    0 0 8px #f00,
+    0 0 12px #f33;
+}
+.engine-broke-label {
+  margin-top: 4px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #f33;
+  text-shadow:
+    0 0 8px #f00,
+    0 0 12px #f33,
+    0 0 20px #f66;
+  animation: neonPulse 1.5s infinite alternate;
+}
+@keyframes neonPulse {
+  from {
+    text-shadow:
+      0 0 5px #f00,
+      0 0 10px #f33,
+      0 0 20px #f66;
+  }
+  to {
+    text-shadow:
+      0 0 10px #f00,
+      0 0 20px #f33,
+      0 0 30px #f99;
+  }
+}

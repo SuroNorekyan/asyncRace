@@ -1,0 +1,67 @@
+.winner-card {
+  position: relative;
+  padding: 32px 24px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, var(--panel), #1a1a1a);
+  box-shadow: 0 0 30px var(--accent2);
+  text-align: center;
+  animation: popIn 0.3s ease;
+}
+.overlay__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #ff2a2a;
+  border: none;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.overlay__close:hover {
+  background: #ff5555;
+  box-shadow: 0 0 12px #f00;
+}
+.overlay__title {
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+  color: var(--accent2);
+}
+.overlay__name {
+  font-size: 2.4rem;
+  margin-bottom: 8px;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+}
+.overlay__time {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  opacity: 0.85;
+}
+.overlay__actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.overlay__actions .btn {
+  min-width: 140px;
+  padding: 12px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+}
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

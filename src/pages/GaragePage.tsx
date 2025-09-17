@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import CarRow from '../components/CarRow';
-import ControlsBar from '../components/ControlsBar';
-import Pagination from '../components/Pagination';
-import WinnerOverlay from '../components/WinnerOverlay';
+import CarRow from '../components/CarRow/CarRow';
+import ControlsBar from '../components/ControlsBar/ControlsBar';
+import Pagination from '../components/Pagination/Pagination';
+import WinnerOverlay from '../components/WinnerOverlay/WinnerOverlay';
 import { setPage } from '../features/garage/garageSlice';
 import { loadCars } from '../features/garage/thunks';
 

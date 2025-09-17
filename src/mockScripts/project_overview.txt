@@ -1,0 +1,1947 @@
+src\app\App.tsx
+----------------------------------------
+import Header from '../components/Header';
+import AppRoutes from './routes';
+
+const App = () => (
+  <div className="app">
+    <Header />
+    <AppRoutes />
+  </div>
+);
+
+export default App;
+
+
+src\app\hooks.ts
+----------------------------------------
+import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from './store';
+
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+
+
+src\app\routes.tsx
+----------------------------------------
+import { Navigate, Route, Routes } from 'react-router-dom';
+import NotFound from '../components/NotFound';
+import GaragePage from '../pages/GaragePage';
+import WinnersPage from '../pages/WinnersPage';
+
+const AppRoutes = () => (
+  <Routes>
+    <Route path="/" element={<Navigate to="/garage" replace />} />
+    <Route path="/garage" element={<GaragePage />} />
+    <Route path="/winners" element={<WinnersPage />} />
+    <Route path="*" element={<NotFound />} />
+  </Routes>
+);
+
+export default AppRoutes;
+
+
+src\app\store.ts
+----------------------------------------
+import { configureStore } from '@reduxjs/toolkit';
+import garageReducer from '../features/garage/garageSlice';
+import raceReducer from '../features/race/raceSlice';
+import winnersReducer from '../features/winners/winnersSlice';
+
+export const store = configureStore({
+  reducer: {
+    garage: garageReducer,
+    race: raceReducer,
+    winners: winnersReducer,
+  }, 
+  middleware: getDefault => getDefault({ serializableCheck: false }),
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+
+src\assets\react.svg
+----------------------------------------
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+
+src\components\CarRow.tsx
+----------------------------------------
+import clsx from 'clsx';
+import { useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { clearSelection, selectCar } from '../features/garage/garageSlice';
+import { removeCar as removeCarThunk } from '../features/garage/thunks';
+import { startCar, stopCar } from '../features/race/runner';
+import type { Car } from '../shared/types';
+
+type Props = { car: Car };
+
+const CarRow = ({ car }: Props) => {
+  const dispatch = useAppDispatch();
+  const { selectedId } = useAppSelector(s => s.garage);
+  const run = useAppSelector(s => s.race.byId[car.id]);
+  const global = useAppSelector(s => s.race.global);
+
+  const isSelected = selectedId === car.id;
+  const status = run?.status ?? 'idle';
+
+  // race lock: when a global race is running we freeze row actions
+  const isRaceLocked = global === 'inProgress';
+
+  // Button enable/disable rules
+  const canSelect = !isRaceLocked;
+  const canRemove = !isRaceLocked;
+  const canStart = !isRaceLocked && status !== 'driving' && global !== 'finished';
+  const canStop = !isRaceLocked && !(status === 'idle' || status === 'stopped');
+
+  // Responsive cap so the car never overflows the row
+  const [maxPct, setMaxPct] = useState<number>(92); // Desktop
+  useEffect(() => {
+    const apply = () => {
+      const w = window.innerWidth;
+      if (w <= 420) setMaxPct(80);
+      else if (w <= 640) setMaxPct(86);
+      else setMaxPct(92);
+    };
+    apply();
+    window.addEventListener('resize', apply);
+    return () => window.removeEventListener('resize', apply);
+  }, []);
+  const leftPct = ((run?.progress ?? 0) * maxPct).toFixed(3);
+
+  // helper to add a locked style when disabled
+  const btnCx = (base: string, enabled: boolean) => clsx(base, !enabled && 'btn--locked');
+
+  // --- tooltips without nested ternaries ---
+  const startTitle = (() => {
+    if (isRaceLocked) return 'Disabled during the race';
+    if (status === 'driving') return 'Already driving';
+    return 'Start';
+  })();
+
+  const stopTitle = (() => {
+    if (isRaceLocked) return 'Disabled during the race';
+    if (status === 'idle' || status === 'stopped') return 'Car is at start';
+    return 'Stop';
+  })();
+
+  return (
+    <div className="car-row">
+      {/* top line: buttons + name (no overlap) */}
+      <div className="car-row__top">
+        <div className="car-row__buttons">
+          <button
+            type="button"
+            className={btnCx('btn small', canSelect)}
+            disabled={!canSelect}
+            title={isRaceLocked ? 'Disabled during the race' : 'Select'}
+            onClick={() => dispatch(isSelected ? clearSelection() : selectCar(car.id))}
+          >
+            SELECT
+          </button>
+
+          <button
+            type="button"
+            className={btnCx('btn small danger', canRemove)}
+            disabled={!canRemove}
+            title={isRaceLocked ? 'Disabled during the race' : 'Remove'}
+            onClick={() => dispatch(removeCarThunk(car.id))}
+          >
+            REMOVE
+          </button>
+
+          <button
+            type="button"
+            className={btnCx('btn small', canStart)}
+            disabled={!canStart}
+            title={startTitle}
+            onClick={() => dispatch(startCar(car.id))}
+            aria-label="Start engine"
+          >
+            Start Engine
+          </button>
+
+          <button
+            type="button"
+            className={btnCx('btn small', canStop)}
+            disabled={!canStop}
+            title={stopTitle}
+            onClick={() => dispatch(stopCar(car.id))}
+            aria-label="Stop engine"
+          >
+            Stop Engine
+          </button>
+        </div>
+
+        <div className="car-row__name" style={{ color: car.color }}>
+          {car.name}
+        </div>
+      </div>
+
+      {/* optional hint when locked */}
+      {isRaceLocked && <div className="race-lock-hint">Disabled during the race</div>}
+
+      {/* track line */}
+      <div className="car-row__track">
+        <div className="lane">
+          <div
+            className={clsx('car-sprite', status === 'broken' && 'broken')}
+            style={{ left: `${leftPct}%`, borderColor: car.color }}
+          >
+            {status === 'broken' && <div className="car-broken-cross">✖</div>}
+          </div>
+
+          {/* finish line slightly shifted left */}
+          <div className="finish-line" style={{ right: '10px' }} />
+        </div>
+      </div>
+
+      {status === 'broken' && <div className="engine-broke-label">Engine broke</div>}
+    </div>
+  );
+};
+
+export default CarRow;
+
+
+src\components\ControlsBar.tsx
+----------------------------------------
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { setCreateForm, setEditForm } from '../features/garage/garageSlice';
+import { addCar, editCar, generateMany } from '../features/garage/thunks';
+import { bindWinnerListener, resetRaceAll, startRaceAll } from '../features/race/runner';
+
+// small helper to avoid nested ternaries (kept outside component to not increase its line count)
+const pickTitle = (locked: boolean, selectedId: number | null, whenOk: string) => {
+  if (locked) return 'Disabled during the race';
+  if (!selectedId) return 'Select a car first';
+  return whenOk;
+};
+
+const ControlsBar = () => {
+  const d = useAppDispatch();
+  const { createForm, editForm, selectedId } = useAppSelector(s => s.garage);
+  const { global } = useAppSelector(s => s.race);
+
+  const locked = global === 'inProgress'; // block actions during race
+
+  const createTitle = locked ? 'Disabled during the race' : 'Create car';
+  const createNameTitle = locked ? 'Disabled during the race' : 'Car name';
+  const createColorTitle = locked ? 'Disabled during the race' : 'Pick color';
+
+  const updateTitle = pickTitle(locked, selectedId, 'Update car');
+  const updateNameTitle = pickTitle(locked, selectedId, 'Car name');
+  const updateColorTitle = pickTitle(locked, selectedId, 'Pick color');
+
+  return (
+    <section className="controls controls--frosted">
+      {/* Lock banner */}
+      {locked && (
+        <div className="controls__lock" role="status">
+          🚧 Race in progress — editing disabled
+        </div>
+      )}
+
+      {/* Race / Reset */}
+      <div className="cluster cluster--tight">
+        <button
+          type="button"
+          className="btn primary btn--glow"
+          disabled={locked}
+          title={locked ? 'Disabled during the race' : 'Start race for current page'}
+          onClick={() => {
+            d(startRaceAll());
+            d(bindWinnerListener());
+          }}
+        >
+          🚦 RACE
+        </button>
+        <button
+          type="button"
+          className="btn btn--ghost"
+          title="Reset all cars on the current page"
+          onClick={() => d(resetRaceAll())}
+        >
+          🔄 RESET
+        </button>
+      </div>
+
+      {/* Create */}
+      <div className="cluster">
+        <input
+          className="input"
+          placeholder="TYPE CAR BRAND"
+          value={createForm.name}
+          onChange={e => d(setCreateForm({ ...createForm, name: e.target.value }))}
+          disabled={locked}
+          title={createNameTitle}
+        />
+        <input
+          type="color"
+          className="picker"
+          aria-label="Pick color for new car"
+          value={createForm.color}
+          onChange={e => d(setCreateForm({ ...createForm, color: e.target.value }))}
+          disabled={locked}
+          title={createColorTitle}
+        />
+        <button
+          type="button"
+          className={`btn btn--soft ${locked ? 'btn--locked' : ''}`}
+          title={createTitle}
+          disabled={locked}
+          onClick={() => d(addCar())}
+        >
+          ➕ CREATE
+        </button>
+      </div>
+
+      {/* Update */}
+      <div className="cluster">
+        <input
+          className="input"
+          placeholder="TYPE CAR BRAND"
+          value={editForm.name}
+          onChange={e => d(setEditForm({ ...editForm, name: e.target.value }))}
+          disabled={locked || !selectedId}
+          title={updateNameTitle}
+        />
+        <input
+          type="color"
+          className="picker"
+          aria-label="Pick color to update selected car"
+          value={editForm.color}
+          onChange={e => d(setEditForm({ ...editForm, color: e.target.value }))}
+          disabled={locked || !selectedId}
+          title={updateColorTitle}
+        />
+        <button
+          type="button"
+          className={`btn btn--soft ${locked || !selectedId ? 'btn--locked' : ''}`}
+          disabled={locked || !selectedId}
+          title={updateTitle}
+          onClick={() => d(editCar())}
+        >
+          ✏️ UPDATE
+        </button>
+      </div>
+
+      {/* Generate */}
+      <button
+        type="button"
+        className={`btn success btn--glow ${locked ? 'btn--locked' : ''}`}
+        title={locked ? 'Disabled during the race' : 'Generate 100 random cars'}
+        disabled={locked}
+        onClick={() => d(generateMany())}
+      >
+        🎲 GENERATE CARS
+      </button>
+    </section>
+  );
+};
+
+export default ControlsBar;
+
+
+src\components\Header.tsx
+----------------------------------------
+import { NavLink, useLocation } from 'react-router-dom';
+
+const Header = () => {
+  const { pathname } = useLocation();
+
+  return (
+    <header className="header header--frosted">
+      <div className="logo">
+        <span className="logo__stack">
+          <span className="logo__word">ASYNC</span>
+          <span className="logo__word logo__word--accent">RACE</span>
+        </span>
+        <span className="logo__glow" aria-hidden="true" />
+      </div>
+
+      <nav className="header__nav">
+        <NavLink to="/garage" className={`btn nav ${pathname === '/garage' ? 'active' : ''}`}>
+          GARAGE
+        </NavLink>
+        <NavLink to="/winners" className={`btn nav ${pathname === '/winners' ? 'active' : ''}`}>
+          WINNERS
+        </NavLink>
+      </nav>
+    </header>
+  );
+};
+
+export default Header;
+
+
+src\components\NotFound.tsx
+----------------------------------------
+import { useNavigate } from 'react-router-dom';
+
+const NotFound = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="not-found">
+      <h2>404 — No such page</h2>
+      <p>Sorry, the page you’re looking for doesn’t exist.</p>
+      <button type="button" className="btn" onClick={() => navigate('/')} title="Go to garage">
+        ⬅ Back to Garage
+      </button>
+    </div>
+  );
+};
+
+export default NotFound;
+
+
+src\components\Pagination.tsx
+----------------------------------------
+type Props = { page: number; total: number; limit: number; onChange: (p: number) => void };
+const Pagination = ({ page, total, limit, onChange }: Props) => {
+  const pages = Math.max(1, Math.ceil(total / limit));
+  return (
+    <div className="pagination">
+      <button
+        className="btn small"
+        disabled={page <= 1}
+        onClick={() => onChange(page - 1)}
+        type="button"
+      >
+        ‹
+      </button>
+      <span>{`PAGE #${page}`}</span>
+      <button
+        className="btn small"
+        disabled={page >= pages}
+        onClick={() => onChange(page + 1)}
+        type="button"
+      >
+        ›
+      </button>
+    </div>
+  );
+};
+export default Pagination;
+
+
+src\components\Track.tsx
+----------------------------------------
+type Props = { progress: number; color: string };
+const Track = ({ progress, color }: Props) => (
+  <div className="track">
+    <div className="start">START</div>
+    <div className="finish">FINISH</div>
+    <div className="car" style={{ transform: `translateX(${progress * 92}%)`, color }}>
+      {/* icon via CSS */}
+      <div className="car__body" />
+    </div>
+  </div>
+);
+export default Track;
+
+
+src\components\WinnerOverlay.tsx
+----------------------------------------
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { setGlobal, setWinner } from '../features/race/raceSlice';
+import { bindWinnerListener, resetRaceAll, startRaceAll } from '../features/race/runner';
+
+const WinnerOverlay = () => {
+  const d = useAppDispatch();
+  const winner = useAppSelector(s => s.race.winner);
+  const visible = !!winner;
+
+  if (!visible) return null;
+
+  return (
+    <div className="overlay">
+      <div className="overlay__card winner-card">
+        {/* Close button */}
+        <button type="button" className="overlay__close" onClick={() => d(setWinner(null))}>
+          ✖
+        </button>
+
+        <div className="overlay__title">🏆 WINNER 🏆</div>
+        <div className="overlay__name">{winner?.name}</div>
+        <div className="overlay__time">TIME: {winner?.time.toFixed(2)} s</div>
+
+        <div className="overlay__actions">
+          <button
+            type="button"
+            className="btn danger"
+            onClick={() => {
+              d(setWinner(null));
+              d(resetRaceAll());
+            }}
+          >
+            Reset
+          </button>
+          <button
+            type="button"
+            className="btn success"
+            onClick={() => {
+              d(setWinner(null));
+              d(setGlobal('idle'));
+              d(startRaceAll());
+              d(bindWinnerListener());
+            }}
+          >
+            Start a New Race
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default WinnerOverlay;
+
+
+src\components\WinnersTable.tsx
+----------------------------------------
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { loadWinners } from '../features/winners/thunks';
+import { setSort, setWinnersPage } from '../features/winners/winnersSlice';
+import Pagination from './Pagination';
+
+const WinnersTable = () => {
+  const d = useAppDispatch();
+  const { rows, total, page, limit, sort, order } = useAppSelector(s => s.winners);
+
+  const toggleSort = (field: 'wins' | 'time') => {
+    const nextOrder = sort === field && order === 'ASC' ? 'DESC' : 'ASC';
+    d(setSort({ sort: field, order: nextOrder }));
+    d(loadWinners());
+  };
+
+  return (
+    <section className="winners">
+      <div className="winners__header">
+        <h2>WINNERS</h2>
+        <div className="sorts">
+          <button type="button" className="btn small" onClick={() => toggleSort('wins')}>
+            Sort by wins
+          </button>
+          <button type="button" className="btn small" onClick={() => toggleSort('time')}>
+            Sort by best time
+          </button>
+        </div>
+      </div>
+
+      <table className="table">
+        <thead>
+          <tr>
+            <th>№</th>
+            <th>CAR</th>
+            <th>NAME</th>
+            <th>WINS</th>
+            <th>BEST TIME (SECONDS)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((w, idx) => (
+            <tr key={w.id}>
+              <td>{(page - 1) * limit + idx + 1}</td>
+              <td>
+                <div className="car-chip" style={{ borderColor: w.car.color }} />
+              </td>
+              <td>{w.car.name}</td>
+              <td>{w.wins}</td>
+              <td>{w.time.toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <Pagination
+        page={page}
+        total={total}
+        limit={limit}
+        onChange={p => {
+          d(setWinnersPage(p));
+          d(loadWinners());
+        }}
+      />
+    </section>
+  );
+};
+
+export default WinnersTable;
+
+
+src\features\garage\garageSlice.ts
+----------------------------------------
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { Car } from '../../shared/types';
+import { addCar, editCar, generateMany, loadCars, removeCar } from './thunks';
+
+type Form = { name: string; color: string };
+type GarageState = {
+  items: Car[];
+  total: number;
+  page: number;
+  limit: number;
+  selectedId: number | null;
+  createForm: Form;
+  editForm: Form;
+  loading: boolean;
+};
+
+const initial: GarageState = {
+  items: [],
+  total: 0,
+  page: 1,
+  limit: 7,
+  selectedId: null,
+  createForm: { name: '', color: '#ffffff' },
+  editForm: { name: '', color: '#ffffff' },
+  loading: false,
+};
+
+const slice = createSlice({
+  name: 'garage',
+  initialState: initial,
+  reducers: {
+    setPage: (s, a: PayloadAction<number>) => {
+      s.page = a.payload;
+    },
+    setCreateForm: (s, a: PayloadAction<Form>) => {
+      s.createForm = a.payload;
+    },
+    setEditForm: (s, a: PayloadAction<Form>) => {
+      s.editForm = a.payload;
+    },
+    selectCar: (s, a: PayloadAction<number>) => {
+      s.selectedId = a.payload;
+      const found = s.items.find(c => c.id === a.payload);
+      if (found) s.editForm = { name: found.name, color: found.color };
+    },
+    clearSelection: s => {
+      s.selectedId = null;
+    },
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(loadCars.pending, s => {
+        s.loading = true;
+      })
+      .addCase(loadCars.fulfilled, (s, a) => {
+        s.loading = false;
+        s.items = a.payload.items;
+        s.total = a.payload.total;
+      })
+      // handled elsewhere (list is reloaded) — remove unused params to satisfy ESLint
+      .addCase(addCar.fulfilled, () => {})
+      .addCase(editCar.fulfilled, () => {})
+      .addCase(removeCar.fulfilled, () => {})
+      .addCase(generateMany.fulfilled, () => {});
+  },
+});
+
+export const { setPage, setCreateForm, setEditForm, selectCar, clearSelection } = slice.actions;
+export default slice.reducer;
+
+
+src\features\garage\thunks.ts
+----------------------------------------
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import type { RootState } from '../../app/store';
+import { createCar, deleteCar, getCars, updateCar } from '../../shared/api/cars';
+import { deleteWinner } from '../../shared/api/winners';
+import { randomHex } from '../../shared/lib/colors';
+import { randomName } from '../../shared/lib/names';
+
+export const loadCars = createAsyncThunk('garage/load', async (_, { getState }) => {
+  const { page, limit } = (getState() as RootState).garage;
+  const { data, total } = await getCars(page, limit);
+  return { items: data, total };
+});
+
+export const addCar = createAsyncThunk('garage/create', async (_: void, { getState, dispatch }) => {
+  const { createForm } = (getState() as RootState).garage;
+  if (!createForm.name.trim() || createForm.name.length > 30) return;
+  await createCar({ name: createForm.name.trim(), color: createForm.color });
+  await dispatch(loadCars());
+  // if page changed due to new item, keep current page (server-side order is append)
+});
+
+export const editCar = createAsyncThunk(
+  'garage/update',
+  async (_: void, { getState, dispatch }) => {
+    const { selectedId, editForm } = (getState() as RootState).garage;
+    if (!selectedId) return;
+    if (!editForm.name.trim() || editForm.name.length > 30) return;
+    await updateCar(selectedId, { name: editForm.name.trim(), color: editForm.color });
+    await dispatch(loadCars());
+  },
+);
+
+export const removeCar = createAsyncThunk(
+  'garage/delete',
+  async (id: number, { getState, dispatch }) => {
+    await deleteCar(id);
+    // also remove from winners as per spec
+    await deleteWinner(id).catch(() => {});
+
+    const { page, limit, total } = (getState() as RootState).garage;
+    const afterDeleteTotal = total - 1;
+    const lastPage = Math.max(1, Math.ceil(afterDeleteTotal / limit));
+    if (page > lastPage) {
+      const { setPage } = await import('./garageSlice');
+      dispatch(setPage(lastPage));
+    }
+    await dispatch(loadCars());
+  },
+);
+
+export const generateMany = createAsyncThunk('garage/generate', async (_: void, { dispatch }) => {
+  const tasks = Array.from({ length: 100 }, () =>
+    createCar({ name: randomName(), color: randomHex() }),
+  );
+  // Run with limited concurrency to be gentle
+  const batch = 10;
+  for (let i = 0; i < tasks.length; i += batch) {
+    // eslint-disable-next-line no-await-in-loop
+    await Promise.all(tasks.slice(i, i + batch));
+  }
+  await dispatch(loadCars());
+});
+
+
+src\features\race\raceSlice.ts
+----------------------------------------
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+type CarRun = {
+  status: 'idle' | 'started' | 'driving' | 'stopped' | 'broken' | 'finished';
+  progress: number; // 0..1
+  etaMs?: number;
+  startedAt?: number;
+};
+
+type WinnerInfo = { carId: number; name: string; time: number } | null;
+
+type RaceState = {
+  byId: Record<number, CarRun>;
+  global: 'idle' | 'inProgress' | 'finished';
+  winner: WinnerInfo;
+};
+
+const initial: RaceState = { byId: {}, global: 'idle', winner: null };
+
+const slice = createSlice({
+  name: 'race',
+  initialState: initial,
+  reducers: {
+    setRun: (s, a: PayloadAction<{ id: number; run: Partial<CarRun> }>) => {
+      const prev = s.byId[a.payload.id] ?? { status: 'idle', progress: 0 };
+      s.byId[a.payload.id] = { ...prev, ...a.payload.run };
+    },
+    setGlobal: (s, a: PayloadAction<RaceState['global']>) => {
+      s.global = a.payload;
+    },
+    setWinner: (s, a: PayloadAction<WinnerInfo>) => {
+      s.winner = a.payload;
+    },
+    resetAll: () => initial,
+  },
+});
+
+export const { setRun, setGlobal, setWinner, resetAll } = slice.actions;
+export default slice.reducer;
+
+
+src\features\race\runner.ts
+----------------------------------------
+import { AppDispatch, RootState } from '../../app/store';
+import { drive, startEngine, stopEngine } from '../../shared/api/engine';
+import { createWinner, getWinner, updateWinner } from '../../shared/api/winners';
+import { setGlobal, setRun, setWinner } from './raceSlice';
+
+const RACE_SPEED_MULT = Number(import.meta.env.VITE_SPEED_MULT ?? 240);
+const MIN_ANIM_MS = Number(import.meta.env.VITE_MIN_ANIM_MS ?? 600); // avoid teleports
+const PROGRESS_FPS = Number(import.meta.env.VITE_PROGRESS_FPS ?? 20); // throttle Redux updates
+const TICK_INTERVAL = Math.max(1000 / Math.min(60, Math.max(10, PROGRESS_FPS)), 12); // clamp 10..60fps
+
+function computeEtaMs(distance: number, velocity: number): number {
+  // Boost backend velocity, but keep per-car differences
+  const boosted = velocity * Math.max(1, RACE_SPEED_MULT);
+  const eta = (distance / boosted) * 1000;
+  // Ensure at least MIN_ANIM_MS so we get multiple frames
+  return Math.max(MIN_ANIM_MS, Math.round(eta));
+}
+
+type Timers = { raf?: number; finish?: number; lastTick?: number };
+const timers: Record<number, Timers> = {};
+
+const clearTimers = (id: number) => {
+  const t = timers[id];
+  if (t?.raf !== undefined) cancelAnimationFrame(t.raf);
+  if (t?.finish !== undefined) clearTimeout(t.finish);
+  delete timers[id];
+};
+
+export const startCar =
+  (id: number) => async (dispatch: AppDispatch, getState: () => RootState) => {
+    clearTimers(id);
+    const startedAt = Date.now();
+    dispatch(setRun({ id, run: { status: 'started', progress: 0, startedAt } }));
+
+    try {
+      const { velocity, distance } = await startEngine(id);
+      const etaMs = computeEtaMs(distance, velocity);
+
+      dispatch(setRun({ id, run: { status: 'driving', etaMs, startedAt } }));
+
+      // Throttled rAF progress loop (avoid React re-render overload)
+      const loop = () => {
+        const state = getState().race.byId[id];
+        if (!state || state.status !== 'driving' || !state.startedAt || !state.etaMs) return;
+
+        const now = Date.now();
+        const t = Math.min(1, (now - state.startedAt) / state.etaMs);
+
+        const prev = timers[id] ?? {};
+        const last = prev.lastTick ?? 0;
+        if (now - last >= TICK_INTERVAL) {
+          // update lastTick only when we dispatch
+          timers[id] = { ...prev, lastTick: now };
+          dispatch(setRun({ id, run: { progress: t } }));
+        } else {
+          // keep timers object stable
+          timers[id] = { ...prev };
+        }
+
+        timers[id]!.raf = requestAnimationFrame(loop);
+      };
+
+      timers[id] = { raf: requestAnimationFrame(loop), lastTick: 0 };
+
+      // Backend "drive" may 500 → broken (freeze where it stopped)
+      drive(id).catch(() => {
+        clearTimers(id);
+        const st = getState().race.byId[id];
+        dispatch(setRun({ id, run: { status: 'broken', progress: st?.progress ?? 0 } }));
+      });
+
+      // Finish after ETA if still driving
+      if (!timers[id]) timers[id] = {};
+      timers[id]!.finish = window.setTimeout(() => {
+        const state = getState().race.byId[id];
+        if (state?.status === 'driving') {
+          dispatch(setRun({ id, run: { status: 'finished', progress: 1 } }));
+        }
+        clearTimers(id);
+      }, etaMs);
+    } catch {
+      clearTimers(id);
+      dispatch(setRun({ id, run: { status: 'broken', progress: 0 } }));
+    }
+  };
+
+export const stopCar = (id: number) => async (dispatch: AppDispatch) => {
+  clearTimers(id);
+  await stopEngine(id).catch(() => {});
+  // snap back to start (omit optional fields instead of setting undefined)
+  dispatch(setRun({ id, run: { status: 'idle', progress: 0 } }));
+};
+
+export const startRaceAll = () => async (dispatch: AppDispatch, getState: () => RootState) => {
+  dispatch(setWinner(null));
+  dispatch(setGlobal('inProgress'));
+
+  // race only cars on current page (assignment requirement)
+  const cars = getState().garage.items;
+  await Promise.all(cars.map(c => dispatch(startCar(c.id))));
+};
+
+export const resetRaceAll = () => async (dispatch: AppDispatch, getState: () => RootState) => {
+  const cars = getState().garage.items;
+  await Promise.all(
+    cars.map(async c => {
+      clearTimers(c.id);
+      await stopEngine(c.id).catch(() => {});
+      // set to idle; omit etaMs/startedAt to satisfy exactOptionalPropertyTypes
+      dispatch(setRun({ id: c.id, run: { status: 'idle', progress: 0 } }));
+    }),
+  );
+  dispatch(setGlobal('idle'));
+  dispatch(setWinner(null));
+};
+
+export const bindWinnerListener = () => (dispatch: AppDispatch, getState: () => RootState) => {
+  const tick = () => {
+    const st = getState();
+    if (st.race.global !== 'inProgress') return;
+
+    const finished = Object.entries(st.race.byId).find(([, r]) => r.status === 'finished');
+    if (finished && !st.race.winner) {
+      const id = Number(finished[0]);
+      const name = st.garage.items.find(x => x.id === id)?.name ?? `#${id}`;
+      const time = (st.race.byId[id]?.etaMs ?? 0) / 1000;
+
+      dispatch(setWinner({ carId: id, name, time }));
+      dispatch(setGlobal('finished'));
+
+      (async () => {
+        const existing = await getWinner(id)
+          .then(r => r.data)
+          .catch(() => null);
+        if (!existing) await createWinner({ id, wins: 1, time });
+        else
+          await updateWinner(id, {
+            wins: existing.wins + 1,
+            time: Math.min(existing.time, time),
+          });
+      })();
+    } else {
+      requestAnimationFrame(tick);
+    }
+  };
+
+  requestAnimationFrame(tick);
+};
+
+
+src\features\winners\thunks.ts
+----------------------------------------
+import { createAsyncThunk } from '@reduxjs/toolkit';
+import type { RootState } from '../../app/store';
+import { getCar } from '../../shared/api/cars';
+import { deleteWinner, getWinners } from '../../shared/api/winners';
+import type { WinnerRow } from '../../shared/types';
+
+export const loadWinners = createAsyncThunk('winners/load', async (_, { getState }) => {
+  const { page, limit, sort, order } = (getState() as RootState).winners;
+  const { data, total } = await getWinners(page, limit, sort, order);
+
+  const rows: WinnerRow[] = [];
+  let removed = 0;
+
+  // handle each row independently so a 404 doesn't kill the whole list
+  for (const w of data) {
+    try {
+      const car = (await getCar(w.id)).data;
+      rows.push({ ...w, car: { name: car.name, color: car.color } });
+    } catch {
+      // Car no longer exists -> clean up the winners table to satisfy spec
+      // (delete from winners when a car is deleted)
+      // This is silent-best-effort; if it fails, just skip this row.
+      // eslint-disable-next-line no-await-in-loop
+      await deleteWinner(w.id).catch(() => {});
+      removed += 1;
+    }
+  }
+
+  return { rows, total: total - removed };
+});
+
+export default loadWinners;
+
+
+src\features\winners\winnersSlice.ts
+----------------------------------------
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { SortField, SortOrder, WinnerRow } from '../../shared/types';
+import { loadWinners } from './thunks';
+
+type WinnersState = {
+  rows: WinnerRow[];
+  total: number;
+  page: number;
+  limit: number;
+  sort: SortField;
+  order: SortOrder;
+  loading: boolean;
+};
+
+const initial: WinnersState = {
+  rows: [],
+  total: 0,
+  page: 1,
+  limit: 10,
+  sort: 'id',
+  order: 'ASC',
+  loading: false,
+};
+
+const slice = createSlice({
+  name: 'winners',
+  initialState: initial,
+  reducers: {
+    setWinnersPage: (s, a: PayloadAction<number>) => {
+      s.page = a.payload;
+    },
+    setSort: (s, a: PayloadAction<{ sort: SortField; order: SortOrder }>) => {
+      s.sort = a.payload.sort;
+      s.order = a.payload.order;
+    },
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(loadWinners.pending, s => {
+        s.loading = true;
+      })
+      .addCase(loadWinners.fulfilled, (s, a) => {
+        s.loading = false;
+        s.rows = a.payload.rows;
+        s.total = a.payload.total;
+      });
+  },
+});
+
+export const { setWinnersPage, setSort } = slice.actions;
+export default slice.reducer;
+
+
+src\main.tsx
+----------------------------------------
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux';
+import { HashRouter } from 'react-router-dom';
+import App from './app/App';
+import { store } from './app/store';
+import './styles/index.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <Provider store={store}>
+      <HashRouter>
+        <App />
+      </HashRouter>
+    </Provider>
+  </React.StrictMode>,
+);
+
+
+src\mockScripts\generateOverview.cjs
+----------------------------------------
+const fs = require('fs');
+const path = require('path');
+
+const targetDir = path.join(__dirname, '../..', 'src');
+const outputFile = path.join(__dirname, 'project_overview.txt');
+
+function walk(dir, fileList = []) {
+  for (const file of fs.readdirSync(dir)) {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    if (stat.isDirectory()) {
+      walk(filePath, fileList);
+    } else {
+      fileList.push(filePath);
+    }
+  }
+  return fileList;
+}
+
+function generate() {
+  const files = walk(targetDir);
+  let output = '';
+
+  for (const file of files) {
+    const relativePath = path.relative(process.cwd(), file);
+    const content = fs.readFileSync(file, 'utf-8');
+
+    output += `${relativePath}\n`;
+    output += '----------------------------------------\n';
+    output += content + '\n\n';
+  }
+
+  fs.writeFileSync(outputFile, output, 'utf-8');
+  console.log(`✅ Overview created at: ${outputFile}`);
+}
+
+generate();
+
+
+src\pages\GaragePage.tsx
+----------------------------------------
+import { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import CarRow from '../components/CarRow';
+import ControlsBar from '../components/ControlsBar';
+import Pagination from '../components/Pagination';
+import WinnerOverlay from '../components/WinnerOverlay';
+import { setPage } from '../features/garage/garageSlice';
+import { loadCars } from '../features/garage/thunks';
+
+const GaragePage = () => {
+  const d = useAppDispatch();
+  const { items, total, page, limit } = useAppSelector(s => s.garage);
+
+  // load data on page/limit changes
+  useEffect(() => {
+    d(loadCars());
+  }, [d, page, limit]);
+
+  // if current page became empty after deletion, step back (until page 1)
+  useEffect(() => {
+    if (page > 1 && items.length === 0) {
+      d(setPage(page - 1));
+    }
+  }, [d, page, items.length]);
+
+  const isEmptyGarage = total === 0;
+
+  return (
+    <main className="page garage">
+      <ControlsBar />
+
+      {isEmptyGarage ? (
+        <div className="empty-state">
+          <div className="empty-state__title">No cars yet</div>
+          <div className="empty-state__hint">Use “CREATE” or “GENERATE CARS” to add some.</div>
+        </div>
+      ) : (
+        <>
+          <div className="garage__list">
+            {items.map(c => (
+              <CarRow key={c.id} car={c} />
+            ))}
+          </div>
+
+          <div className="garage__footer">
+            <div className="count">GARAGE ({total})</div>
+            <Pagination page={page} total={total} limit={limit} onChange={p => d(setPage(p))} />
+          </div>
+        </>
+      )}
+
+      <WinnerOverlay />
+    </main>
+  );
+};
+
+export default GaragePage;
+
+
+src\pages\WinnersPage.tsx
+----------------------------------------
+import { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import WinnersTable from '../components/WinnersTable';
+import { loadWinners } from '../features/winners/thunks';
+
+const WinnersPage = () => {
+  const d = useAppDispatch();
+
+  // pull state so useEffect can respond to changes
+  const { page, limit, sort, order } = useAppSelector(s => s.winners);
+
+  useEffect(() => {
+    d(loadWinners());
+  }, [d, page, limit, sort, order]); // <- important
+
+  return (
+    <main className="page winners">
+      <WinnersTable />
+    </main>
+  );
+};
+export default WinnersPage;
+
+
+src\shared\api\base.ts
+----------------------------------------
+import { qs } from '../lib/qs';
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:3000';
+
+export const apiUrl = (path: string, params?: Record<string, string | number | undefined>) =>
+  `${API_BASE}${path}${params ? qs(params) : ''}`;
+
+export type FetchResult<T> = { data: T; headers: Headers };
+
+export async function getJSON<T>(url: string, init?: RequestInit): Promise<FetchResult<T>> {
+  const res = await fetch(url, init);
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`${res.status} ${res.statusText}: ${text}`);
+  }
+  const data = (await res.json()) as T;
+  return { data, headers: res.headers };
+}
+
+
+src\shared\api\cars.ts
+----------------------------------------
+import { Car } from '../types';
+import { apiUrl, getJSON } from './base';
+
+export async function getCars(page: number, limit: number) {
+  const { data, headers } = await getJSON<Car[]>(apiUrl('/garage', { _page: page, _limit: limit }));
+  const total = Number(headers.get('X-Total-Count') ?? '0'); // :contentReference[oaicite:4]{index=4}
+  return { data, total };
+}
+
+export const getCar = (id: number) => getJSON<Car>(apiUrl(`/garage/${id}`)); // :contentReference[oaicite:5]{index=5}
+
+export async function createCar(input: Omit<Car, 'id'>) {
+  const { data } = await getJSON<Car>(apiUrl('/garage'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  }); // :contentReference[oaicite:6]{index=6}
+  return data;
+}
+
+export async function updateCar(id: number, input: Omit<Car, 'id'>) {
+  const { data } = await getJSON<Car>(apiUrl(`/garage/${id}`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  }); // :contentReference[oaicite:7]{index=7}
+  return data;
+}
+
+export async function deleteCar(id: number) {
+  await getJSON<unknown>(apiUrl(`/garage/${id}`), { method: 'DELETE' }); // :contentReference[oaicite:8]{index=8}
+}
+
+
+src\shared\api\engine.ts
+----------------------------------------
+// src/shared/api/engine.ts
+import type { EngineStartResponse } from '../types';
+import { apiUrl, getJSON } from './base';
+
+/**
+ * Start engine for car id.
+ * Backend returns { velocity, distance } for time calculation.
+ * Method: PATCH /engine?id=...&status=started
+ */
+export async function startEngine(id: number): Promise<EngineStartResponse> {
+  const { data } = await getJSON<EngineStartResponse>(
+    apiUrl('/engine', { id, status: 'started' }),
+    { method: 'PATCH' },
+  );
+  return data;
+}
+
+/**
+ * Stop engine for car id; puts car back to start.
+ * Method: PATCH /engine?id=...&status=stopped
+ */
+export async function stopEngine(id: number): Promise<unknown> {
+  const { data } = await getJSON<unknown>(apiUrl('/engine', { id, status: 'stopped' }), {
+    method: 'PATCH',
+  });
+  return data;
+}
+
+/**
+ * Engage driving mode; may respond 200 {success:true} or 500 error.
+ * Method: PATCH /engine?id=...&status=drive
+ */
+export async function drive(id: number): Promise<{ success: boolean }> {
+  const { data } = await getJSON<{ success: boolean }>(apiUrl('/engine', { id, status: 'drive' }), {
+    method: 'PATCH',
+  });
+  return data;
+}
+
+
+src\shared\api\winners.ts
+----------------------------------------
+import { Winner } from '../types';
+import { apiUrl, getJSON } from './base';
+
+export async function getWinners(
+  page: number,
+  limit: number,
+  sort: 'id' | 'wins' | 'time',
+  order: 'ASC' | 'DESC',
+) {
+  const { data, headers } = await getJSON<Winner[]>(
+    apiUrl('/winners', {
+      _page: page,
+      _limit: limit,
+      _sort: sort,
+      _order: order.toLowerCase() as 'asc' | 'desc', // <-- important
+    }),
+  );
+  const total = Number(headers.get('X-Total-Count') ?? '0');
+  return { data, total };
+}
+
+export const getWinner = (id: number) => getJSON<Winner>(apiUrl(`/winners/${id}`));
+
+export async function createWinner(payload: Winner) {
+  const { data } = await getJSON<Winner>(apiUrl('/winners'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return data;
+}
+
+export async function updateWinner(id: number, payload: Omit<Winner, 'id'>) {
+  const { data } = await getJSON<Winner>(apiUrl(`/winners/${id}`), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return data;
+}
+
+export const deleteWinner = (id: number) =>
+  getJSON<unknown>(apiUrl(`/winners/${id}`), { method: 'DELETE' });
+
+
+src\shared\lib\colors.ts
+----------------------------------------
+export const randomHex = () =>
+  `#${Math.floor(Math.random() * 0xffffff)
+    .toString(16)
+    .padStart(6, '0')}`;
+
+export default randomHex;
+
+
+src\shared\lib\names.ts
+----------------------------------------
+const BRANDS = [
+  'Tesla',
+  'Ford',
+  'BMW',
+  'Audi',
+  'Mercedes',
+  'Volvo',
+  'Toyota',
+  'Honda',
+  'Nissan',
+  'Mazda',
+  'Porsche',
+  'Lexus',
+];
+const MODELS = [
+  'Model S',
+  'Model 3',
+  'Mustang',
+  'Civic',
+  'Supra',
+  'CX-5',
+  'A6',
+  'S3',
+  'GLB',
+  'C-Class',
+  'V90',
+  'Roadster',
+];
+
+export const randomName = () => {
+  const brand = BRANDS[Math.floor(Math.random() * BRANDS.length)];
+  const model = MODELS[Math.floor(Math.random() * MODELS.length)];
+  return `${brand} ${model}`;
+};
+
+export default randomName;
+
+
+src\shared\lib\qs.ts
+----------------------------------------
+export const qs = (params: Record<string, string | number | undefined>) => {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined) search.set(k, String(v));
+  });
+  const s = search.toString();
+  return s ? `?${s}` : '';
+};
+
+export default qs;
+
+
+src\shared\types.ts
+----------------------------------------
+export type Car = {
+  id: number;
+  name: string;
+  color: string; // hex
+};
+
+export type EngineStartResponse = {
+  velocity: number; // px/s equivalent unit from API
+  distance: number; // track distance unit from API
+};
+
+export type Winner = {
+  id: number; // carId
+  wins: number;
+  time: number; // in seconds
+};
+
+export type WinnerRow = Winner & {
+  car: Pick<Car, 'name' | 'color'>;
+};
+
+export type SortField = 'id' | 'wins' | 'time';
+export type SortOrder = 'ASC' | 'DESC';
+
+
+src\styles\index.css
+----------------------------------------
+@import './variables.css';
+
+/* =========================================
+   Base / Reset
+   ========================================= */
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  font-family: Inter, system-ui, Arial, sans-serif;
+  color: var(--text);
+}
+
+/* Layout container */
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Sticky heights (used by header/controls) */
+:root {
+  --header-h: 72px; /* fixed header height */
+}
+
+/* =========================================
+   Header (Sticky Neon Bar)
+   ========================================= */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--header-h);
+  padding: 12px 16px;
+  margin-bottom: 16px; /* keeps old spacing in case sticky not supported */
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: linear-gradient(180deg, rgba(17, 17, 28, 0.85), rgba(17, 17, 28, 0.6));
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(157, 76, 255, 0.35);
+  box-shadow: 0 8px 24px rgba(157, 76, 255, 0.12);
+}
+
+/* Navigation in header */
+.header__nav {
+  display: flex;
+  gap: 12px;
+}
+
+/* Neon logo */
+.logo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo__stack {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1;
+}
+.logo__word {
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  font-size: 18px;
+  color: var(--text);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.1);
+}
+.logo__word--accent {
+  color: var(--accent2);
+  text-shadow:
+    0 0 12px var(--accent2),
+    0 0 24px var(--accent2);
+}
+.logo__glow {
+  position: absolute;
+  inset: -6px -10px -8px -10px;
+  border-radius: 14px;
+  pointer-events: none;
+  box-shadow:
+    0 0 24px rgba(157, 76, 255, 0.35),
+    inset 0 0 18px rgba(157, 76, 255, 0.2);
+  animation: logoPulse 2.2s ease-in-out infinite alternate;
+}
+@keyframes logoPulse {
+  from {
+    box-shadow:
+      0 0 18px rgba(157, 76, 255, 0.25),
+      inset 0 0 10px rgba(157, 76, 255, 0.12);
+  }
+  to {
+    box-shadow:
+      0 0 30px rgba(157, 76, 255, 0.45),
+      inset 0 0 18px rgba(157, 76, 255, 0.2);
+  }
+}
+
+/* =========================================
+   Buttons / Inputs
+   ========================================= */
+.btn {
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn:hover {
+  box-shadow: 0 0 12px var(--accent);
+}
+.btn.primary {
+  border-color: var(--accent2);
+}
+.btn.success {
+  border-color: var(--good);
+}
+.btn.danger {
+  border-color: var(--bad);
+}
+.btn.small {
+  padding: 6px 8px;
+  font-size: 0.9rem;
+}
+.btn.nav {
+  font-weight: 700;
+}
+.btn.nav.active {
+  box-shadow: 0 0 18px var(--accent2);
+}
+
+/* Fancy variants (opt-in) */
+.btn--glow {
+  border: none;
+  background: linear-gradient(90deg, rgba(157, 76, 255, 0.15), rgba(157, 76, 255, 0.35));
+  box-shadow: 0 0 14px rgba(157, 76, 255, 0.35);
+}
+.btn--glow:hover {
+  box-shadow: 0 0 18px rgba(157, 76, 255, 0.55);
+}
+.btn--soft {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.btn--ghost {
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+}
+
+/* Inputs */
+.input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--muted);
+  background: transparent;
+  color: var(--text);
+  min-width: 180px;
+}
+.picker {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--muted);
+  border-radius: 6px;
+  background: transparent;
+}
+
+/* =========================================
+   Controls Bar (Sticky Below Header)
+   ========================================= */
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr auto;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  position: sticky;
+  top: calc(var(--header-h) + 8px);
+  z-index: 40;
+  background: linear-gradient(180deg, rgba(22, 22, 35, 0.85), rgba(22, 22, 35, 0.6));
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(157, 76, 255, 0.32);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 6px 24px rgba(157, 76, 255, 0.12);
+}
+
+/* Cluster rows inside controls */
+.controls .cluster {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.cluster--tight .btn {
+  min-width: 110px;
+}
+
+/* Keep controls clickable above tracks */
+.controls .btn,
+.controls .input,
+.controls .picker,
+.car-row__buttons .btn {
+  pointer-events: auto;
+}
+
+/* =========================================
+   Garage List + Car Rows
+   ========================================= */
+.page.garage .garage__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* ---- ROW LAYOUT (no overlap) ---- */
+.car-row {
+  display: grid;
+  grid-template-rows: auto 1fr; /* buttons+name row, then the track */
+  gap: 10px;
+  background: linear-gradient(to right, rgba(157, 76, 255, 0.08), transparent);
+  border: 1px solid rgba(157, 76, 255, 0.3);
+  padding: 10px;
+  border-radius: 14px;
+  position: relative;
+  z-index: 1; /* stay below sticky controls */
+}
+.car-row__top {
+  display: grid;
+  grid-template-columns: auto 1fr; /* buttons on left, name on right */
+  align-items: center;
+  gap: 12px;
+}
+.car-row__buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.car-row__name {
+  min-width: 0;
+  font-size: 1.2rem;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Track visuals */
+.car-row__track .lane {
+  position: relative;
+  height: 56px;
+  border-top: 2px dashed #fff2;
+  border-bottom: 2px dashed #fff2;
+}
+.car-sprite {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  width: 64px;
+  height: 32px;
+  border: 3px solid var(--accent2);
+  border-radius: 24px;
+  box-shadow:
+    0 0 12px var(--accent2) inset,
+    0 0 12px var(--accent2);
+}
+.finish-line {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background: linear-gradient(#0f0, #0f0 50%, transparent 50%);
+  background-size: 4px 16px;
+}
+
+/* Decorative tracks shouldn't intercept clicks */
+.car-row__track,
+.car-row__track .lane {
+  pointer-events: none;
+}
+
+/* =========================================
+   Garage Footer / Pagination
+   ========================================= */
+.garage__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.count {
+  font-size: 1.4rem;
+  letter-spacing: 0.15em;
+  color: var(--accent2);
+  text-shadow: 0 0 10px var(--accent2);
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pagination span {
+  opacity: 0.9;
+  letter-spacing: 0.2em;
+}
+
+/* =========================================
+   Overlay / Winner Card
+   ========================================= */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #0009;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.overlay__card {
+  background: var(--panel);
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid var(--accent2);
+  text-align: center;
+  min-width: 320px;
+  box-shadow: 0 0 24px var(--accent2);
+}
+.overlay__title {
+  font-size: 1.2rem;
+  color: var(--muted);
+}
+.overlay__name {
+  font-size: 2rem;
+  letter-spacing: 0.2em;
+  margin: 8px 0;
+}
+.overlay__time {
+  opacity: 0.8;
+  margin-bottom: 10px;
+}
+
+/* Winner card (enhanced) */
+.winner-card {
+  position: relative;
+  padding: 32px 24px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, var(--panel), #1a1a1a);
+  box-shadow: 0 0 30px var(--accent2);
+  text-align: center;
+  animation: popIn 0.3s ease;
+}
+
+/* Winner close button */
+.overlay__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #ff2a2a;
+  border: none;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.overlay__close:hover {
+  background: #ff5555;
+  box-shadow: 0 0 12px #f00;
+}
+
+/* Winner info details (override defaults for stronger glow) */
+.overlay__title {
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+  color: var(--accent2);
+  text-shadow: 0 0 12px var(--accent2);
+}
+.overlay__name {
+  font-size: 2.4rem;
+  margin-bottom: 8px;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+}
+.overlay__time {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  opacity: 0.85;
+}
+
+/* Winner actions row */
+.overlay__actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.overlay__actions .btn {
+  min-width: 140px;
+  padding: 12px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+}
+
+/* Green / Red call-to-action variants */
+.btn.success {
+  border: none;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  color: white;
+  box-shadow: 0 0 15px #16a34a88;
+}
+.btn.success:hover {
+  background: linear-gradient(90deg, #16a34a, #15803d);
+}
+.btn.danger {
+  border: none;
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 0 15px #dc262688;
+}
+.btn.danger:hover {
+  background: linear-gradient(90deg, #dc2626, #b91c1c);
+}
+
+/* Animations */
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* =========================================
+   Broken Engine Styling
+   ========================================= */
+.car-sprite.broken {
+  position: relative;
+  box-shadow:
+    0 0 20px red inset,
+    0 0 20px red;
+  border-color: red !important;
+}
+.car-broken-cross {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: red;
+  text-shadow:
+    0 0 8px #f00,
+    0 0 12px #f33;
+}
+.engine-broke-label {
+  margin-top: 4px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #f33;
+  text-shadow:
+    0 0 8px #f00,
+    0 0 12px #f33,
+    0 0 20px #f66;
+  animation: neonPulse 1.5s infinite alternate;
+}
+@keyframes neonPulse {
+  from {
+    text-shadow:
+      0 0 5px #f00,
+      0 0 10px #f33,
+      0 0 20px #f66;
+  }
+  to {
+    text-shadow:
+      0 0 10px #f00,
+      0 0 20px #f33,
+      0 0 30px #f99;
+  }
+}
+
+/* =========================================
+   Tables
+   ========================================= */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+.table th,
+.table td {
+  border-bottom: 1px solid #fff2;
+  padding: 10px;
+  text-align: left;
+}
+.car-chip {
+  width: 52px;
+  height: 26px;
+  border: 3px solid var(--accent);
+  border-radius: 24px;
+  box-shadow: 0 0 10px var(--accent) inset;
+}
+
+/* =========================================
+   Responsive Tweaks
+   ========================================= */
+@media (max-width: 964px) {
+  .controls {
+    grid-template-columns: 1fr;
+  }
+  .car-row__track .lane {
+    height: 48px;
+  }
+  .header__nav {
+    gap: 8px;
+  }
+  .btn.nav {
+    padding: 8px 10px;
+  }
+}
+
+
+src\styles\variables.css
+----------------------------------------
+:root {
+  --bg: #0b1730;
+  --panel: #0f2146;
+  --accent: #9d4cff;
+  --accent2: #23d6e7;
+  --text: #e8e8ff;
+  --muted: #7a87a6;
+  --good: #00c853;
+  --bad: #ff5252;
+}
+
+
+src\vite-env.d.ts
+----------------------------------------
+/// <reference types="vite/client" />
+
+

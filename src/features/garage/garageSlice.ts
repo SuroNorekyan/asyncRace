@@ -8,7 +8,7 @@ type GarageState = {
   total: number;
   page: number;
   limit: number;
-  selectedId: number | null;
+  selectedCarId: number | null;
   createForm: Form;
   editForm: Form;
   loading: boolean;
@@ -19,7 +19,7 @@ const initial: GarageState = {
   total: 0,
   page: 1,
   limit: 7,
-  selectedId: null,
+  selectedCarId: null,
   createForm: { name: '', color: '#ffffff' },
   editForm: { name: '', color: '#ffffff' },
   loading: false,
@@ -39,12 +39,12 @@ const slice = createSlice({
       s.editForm = a.payload;
     },
     selectCar: (s, a: PayloadAction<number>) => {
-      s.selectedId = a.payload;
+      s.selectedCarId = a.payload;
       const found = s.items.find(c => c.id === a.payload);
       if (found) s.editForm = { name: found.name, color: found.color };
     },
     clearSelection: s => {
-      s.selectedId = null;
+      s.selectedCarId = null;
     },
   },
   extraReducers: builder => {

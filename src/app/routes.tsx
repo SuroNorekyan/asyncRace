@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
-import NotFound from '../components/NotFound';
+import NotFound from '../components/NotFound/NotFound';
 import GaragePage from '../pages/GaragePage';
 import WinnersPage from '../pages/WinnersPage';
 
